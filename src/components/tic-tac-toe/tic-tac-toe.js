@@ -172,7 +172,7 @@ customElements.define('tic-tac-toe',
       const memoryState = document.createElement('memory-state')
       memoryState.InheritStyle(this.shadowRoot.querySelector('style'))
       this.currentState = this._pwdApp.appendChild(memoryState)
-      this.currentState.InitiateGame(this.gameType)
+      this.currentState.StartGameAPIGet(this.gameType)
       this.currentState.addEventListener('allpairsfound', (event) => {
         const message = [
           'Congratulations ' + this.userNickname + '!',

@@ -101,6 +101,9 @@ customElements.define('memory-state',
 
       this.playerSymbol = 'o'
       this.opponentSymbol = 'x'
+      this._startGameUri = 'http://localhost:8080/games/start'
+      this._playerMovePostBaseUri = 'http://localhost:8080/games/'
+      this._currentGameID = ''
 
       /* Reference for setting the size of the cards depending on game type */
       this.cardSizes = {
@@ -163,7 +166,11 @@ customElements.define('memory-state',
      *
      * @param {string} gameType - The game type selected in the nickname state.
      */
-    InitiateGame (gameType) {
+    InitiateGame (gameType, responseJSON) {
+      this._currentGameID = responseJSON.id
+      console.log(responseJSON)
+      console.log('New game ID set to: ' + this._currentGameID)
+
       this._pairsFoundCounter.textContent = '0'
       this._mistakesCounter.textContent = '0'
 
@@ -254,6 +261,78 @@ customElements.define('memory-state',
       /* Sets up initial keyboard event listeners */
       this.addEventListener('keydown', this.keyDownFunction)
       this.addEventListener('keyup', this.keyUpFunction)
+    }
+
+    /**
+     * Retrieves a new question from the server and parses it to a JSON object, which is then
+     * used by DisplayNewQuestion() to create a new question screen.
+     *
+     * @param {string} move - The URL of the question to be retrieved.
+     */
+    async PlayerMoveAPIPost (move) {
+      try {
+        const response = await window.fetch(this._playerMovePostBaseUri + move, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: answerJSONstringified
+        })
+        const responseJSON = await response.json() // Parse response to JSON object
+        console.log(responseJSON)
+      // Error handling
+      } catch (error) {
+        console.log('Error on fetch request!')
+      }
+    }
+
+    /**
+     * Retrieves a new question from the server and parses it to a JSON object, which is then
+     * used by DisplayNewQuestion() to create a new question screen.
+     */
+    async StartGameAPIGet (gameType) {
+      try {
+        const response = await window.fetch(this._startGameUri)
+        const responseJSON = await response.json() // Parse response to JSON object
+        this.InitiateGame(gameType, responseJSON)
+      // Error handling
+      } catch (error) {
+        console.log('Error on fetch request!')
+      }
+    }
+    
+    /**
+     * Sends the answer to a question as a POST request, then determines and
+     * displays the next screen depending on the response.
+     *
+     * @param {string} answer - The given answer.
+     * @param {number} time - The time taken to answer the question.
+     */
+    async SendAnswerToQuestion (answer, time) {
+      try {
+        const answerJSONstringified = await JSON.stringify(answer)
+        /* Send POST request to server and await response */
+        const response = await window.fetch(this.currentScreen.getAttribute('nextURL'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: answerJSONstringified
+        })
+        const responseJSON = await response.json() // Parse response to JSON object
+        /* Evaluate whether the submitted answer was correct */
+        if (response.status === 200) { // Answer is correct
+          this.totalTime = this.totalTime + time
+          await this.DisplayTimedMessage(responseJSON.message, this._messageTime, (e) => {
+            if ({}.hasOwnProperty.call(responseJSON, 'nextURL')) {
+              this.RetrieveNewQuestion(responseJSON.nextURL)
+            } else {
+              this.DisplayHighscore(true)
+            }
+          })
+        } else { // Answer is incorrect
+          await this.DisplayTimedMessage(responseJSON.message, this._messageTime, (e) => { this.DisplayHighscore(false) })
+        }
+      // Error handling
+      } catch (error) {
+        console.log('Error on fetch request!')
+      }
     }
 
     /**
