@@ -1,0 +1,4 @@
+# <pwd-chat>
+The pwd-chat is a simple messaging application, intended for being used within the pwd-application component. Instruction on how to install the pwd-memory app can be found in the README.md file of pwd-application.
+When first starting the app, the user is asked to enter a nickname of at least three characters. After a nickname has been submitted, the chat room will be displayed to the user. The chosen nickname will be stored for future sessions, but can be changed easily by clicking the 'Log out' button to return to the nickname screen.
+Messages can be submitted either by pressing the Enter key or clicking the 'Send' button. The pwd-chat uses the emoji-collection component to enable emoji support - open the emoji-collection by pressing the smiley-button above the message input.

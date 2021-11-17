@@ -45,7 +45,5 @@
       "bundle": false
     }
   },
-  "dependencies": {
-
-  }
+  "dependencies": {}
 }
