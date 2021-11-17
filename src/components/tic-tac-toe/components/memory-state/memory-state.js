@@ -194,7 +194,8 @@ customElements.define('memory-state',
           newTile.column = j
           newTile.cardID = k
           newTile.addEventListener('click', event => {
-            if (event.button === 0) {
+            this.OnClickTile(newTile, event)
+            /*if (event.button === 0) {
               this._selectedTileColumn = newTile.column
               this._selectedTileRow = newTile.row
               this._selectedTile = newTile.cardID
@@ -204,9 +205,10 @@ customElements.define('memory-state',
                 && tile.getAttribute('state') != this.opponentSymbol) {
                   this.PlayConfirmSoundEffect()
                   tile.setState(this.playerSymbol)
+                  this.AwaitAnimationEnd(tile.currentSymbolImg)
                   this.PlayerMoveAPIPost(this._selectedTile)
               }
-            }
+            }*/
           })
           newCardLine.appendChild(newTile)
           this._activeTiles.push(newTile)
@@ -274,6 +276,23 @@ customElements.define('memory-state',
       this.addEventListener('keyup', this.keyUpFunction)
     }
 
+    async OnClickTile(clickedTile, event) {
+      if (event.button === 0) {
+        this._selectedTileColumn = clickedTile.column
+        this._selectedTileRow = clickedTile.row
+        this._selectedTile = clickedTile.cardID
+        this.UpdateTileSelection()
+        const tile = this._activeTiles[this._selectedTile]
+        if (tile.getAttribute('state') != this.playerSymbol
+          && tile.getAttribute('state') != this.opponentSymbol) {
+            this.PlayConfirmSoundEffect()
+            tile.setState(this.playerSymbol)
+            await this.AwaitAnimationEnd(tile.currentSymbolImg)
+            this.PlayerMoveAPIPost(this._selectedTile)
+        }
+      }
+    }
+
     PlayConfirmSoundEffect () {
       const selectedSoundEffect = this.getRndInteger(0, 4)
       console.log(this.dispatchEvent(new window.CustomEvent(
@@ -310,6 +329,14 @@ customElements.define('memory-state',
       } catch (error) {
         console.log('Error on fetch request!')
       }
+    }
+
+    async AwaitAnimationEnd (element) {
+      return new Promise(function (resolve, reject) {
+        element.addEventListener('animationend', () => {
+          resolve()
+        })
+      })
     }
 
     /**

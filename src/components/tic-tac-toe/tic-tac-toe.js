@@ -26,7 +26,7 @@ const template = document.createElement('template')
 template.innerHTML = `
   <style>
     #main {
-      background-image: url("` + imagesPath + `mosaic.jpg");
+      background-image: url("${imagesPath}mosaic.jpg");
       position: relative;
       display: block;
       overflow: hidden;

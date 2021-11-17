@@ -65,6 +65,24 @@ template.innerHTML = `
     :focus {
       box-shadow: 0px 0px 0px 2px yellow;
     }
+    /* The animation code */
+    @keyframes appear {
+      from {
+        opacity: 0.0;
+        height: 50%;
+        width: 50%;
+      }
+      to {
+        opacity: 1.0;
+        height: 100%;
+        width: 100%;
+      }
+    }
+    /* The element to apply the animation to */
+    .appearing-symbol {
+      animation-name: appear;
+      animation-duration: 1s;
+    }
   </style>
   <style id="backsideStyle">
     div.backsideUp {
@@ -105,6 +123,7 @@ customElements.define('flipping-tile',
       this._div = this.shadowRoot.querySelector('div')
       this._xImg = this._div.querySelector('img#x')
       this._oImg = this._div.querySelector('img#o')
+      this.currentSymbolImg = null
 
       this._styleSize = this.shadowRoot.querySelector('style#size')
       this.width = 0
@@ -169,9 +188,13 @@ customElements.define('flipping-tile',
       if (this.getAttribute('state') == 'x') {
         this._oImg.classList.add('hidden')
         this._xImg.classList.remove('hidden')
+        this.currentSymbolImg = this._xImg
+        this.currentSymbolImg.classList.add('appearing-symbol')
       } else if (this.getAttribute('state') == 'o') {
         this._xImg.classList.add('hidden')
         this._oImg.classList.remove('hidden')
+        this.currentSymbolImg = this._oImg
+        this.currentSymbolImg.classList.add('appearing-symbol')
       } else {
         this._oImg.classList.add('hidden')
         this._xImg.classList.add('hidden')
