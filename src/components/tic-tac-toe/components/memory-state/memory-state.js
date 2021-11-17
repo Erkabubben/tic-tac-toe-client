@@ -202,6 +202,7 @@ customElements.define('memory-state',
               const tile = this._activeTiles[this._selectedTile]
               if (tile.getAttribute('state') != this.playerSymbol
                 && tile.getAttribute('state') != this.opponentSymbol) {
+                  this.PlayConfirmSoundEffect()
                   tile.setState(this.playerSymbol)
                   this.PlayerMoveAPIPost(this._selectedTile)
               }
@@ -273,6 +274,12 @@ customElements.define('memory-state',
       this.addEventListener('keyup', this.keyUpFunction)
     }
 
+    PlayConfirmSoundEffect () {
+      const selectedSoundEffect = this.getRndInteger(0, 4)
+      console.log(this.dispatchEvent(new window.CustomEvent(
+        'playSFX', { detail: { name: 'confirm-beep-' + selectedSoundEffect } })))
+    }
+
     /**
      * Retrieves a new question from the server and parses it to a JSON object, which is then
      * used by DisplayNewQuestion() to create a new question screen.
@@ -293,6 +300,12 @@ customElements.define('memory-state',
         const opponentResponseTileID = responseJSON.moves[responseJSON.moves.length - 1].position
         const opponentResponseTile = this._activeTiles[opponentResponseTileID]
         opponentResponseTile.setState(this.opponentSymbol)
+        if (responseJSON.gameOver) {
+          console.log('game has ended!')
+          this.dispatchEvent(
+            new window.CustomEvent('gameOver',
+            { detail: { time: this._countdownTimer.counterCurrentTime, mistakes: this._mistakes } }))
+        }
       // Error handling
       } catch (error) {
         console.log('Error on fetch request!')
@@ -313,42 +326,6 @@ customElements.define('memory-state',
         console.log('Error on fetch request!')
       }
     }
-    
-    /**
-     * Sends the answer to a question as a POST request, then determines and
-     * displays the next screen depending on the response.
-     *
-     * @param {string} answer - The given answer.
-     * @param {number} time - The time taken to answer the question.
-     */
-    async SendAnswerToQuestion (answer, time) {
-      try {
-        const answerJSONstringified = await JSON.stringify(answer)
-        /* Send POST request to server and await response */
-        const response = await window.fetch(this.currentScreen.getAttribute('nextURL'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: answerJSONstringified
-        })
-        const responseJSON = await response.json() // Parse response to JSON object
-        /* Evaluate whether the submitted answer was correct */
-        if (response.status === 200) { // Answer is correct
-          this.totalTime = this.totalTime + time
-          await this.DisplayTimedMessage(responseJSON.message, this._messageTime, (e) => {
-            if ({}.hasOwnProperty.call(responseJSON, 'nextURL')) {
-              this.RetrieveNewQuestion(responseJSON.nextURL)
-            } else {
-              this.DisplayHighscore(true)
-            }
-          })
-        } else { // Answer is incorrect
-          await this.DisplayTimedMessage(responseJSON.message, this._messageTime, (e) => { this.DisplayHighscore(false) })
-        }
-      // Error handling
-      } catch (error) {
-        console.log('Error on fetch request!')
-      }
-    }
 
     /**
      * Updates the 'part' attribute of each card, so that only the card whose cardID
@@ -356,26 +333,15 @@ customElements.define('memory-state',
      */
     UpdateTileSelection () {
       for (let i = 0; i < this._activeTiles.length; i++) {
-        const card = this._activeTiles[i]
-        if (card.cardID === this._selectedTile) {
-          card._div.focus()
+        const tile = this._activeTiles[i]
+        if (tile.cardID === this._selectedTile) {
+          tile._div.focus()
         }
       }
     }
 
-    /**
-     * Flips the selected card if it is set to active and not already flipped.
-     * If one card has already been flipped, the method will check whether the
-     * the two cards are a match.
-     */
-    SetStateOfTile (tileID) {
-      const tile = this._activeTiles[tileID]
-      if (tile.getAttribute('state') == this.playerSymbol
-        || tile.getAttribute('state') == this.opponentSymbol) {
-      
-      } else {
-        tile.setState(this.playerSymbol)
-      }
+    getRndInteger(min, max) {
+      return Math.floor(Math.random() * (max - min) ) + min;
     }
 
     /**

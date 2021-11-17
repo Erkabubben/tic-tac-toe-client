@@ -13,6 +13,8 @@ import './components/highscore-state/index.js'
 const pathToModule = import.meta.url
 const imagesPath = new URL('./img/', pathToModule)
 const componentsPath = new URL('./components/', pathToModule)
+const sfxPath = new URL('./audio/sfx/', pathToModule)
+const musicPath = new URL('./audio/music/', pathToModule)
 
 /**
  * Define template.
@@ -36,15 +38,6 @@ template.innerHTML = `
       margin: 16px;
       user-select: none;
     }
-    #memory-question, #nickname-state, #memory-message, #memory-highscore {
-      border-radius: 32px;
-      background-color: #3399FF;
-      border: 16px outset #336699;
-      padding: 16px;
-      width: min-width(480px);
-      height: min-content;
-    }
-
     div#alternatives {
       text-align: left;
     }
@@ -80,7 +73,7 @@ template.innerHTML = `
       padding: 0px;
       width: 100%;
       height: 100%;
-      background-image: url("` + imagesPath + `wallpaper.jpg");
+      background-image: url("${imagesPath}wallpaper.jpg");
     }
     #message-state h2 {
       color: orange;
@@ -97,6 +90,8 @@ template.innerHTML = `
     }
   </style>
   <style id="size"></style>
+  <div id="sound-effects"></div>
+  <div id="music-tracks"></div>
   <div id="main">
   </div>
 `
@@ -134,8 +129,53 @@ customElements.define('tic-tac-toe',
         this.totalTime = 0
         this.gameType = ''
 
+        const availableSoundEffects = [
+          { name: 'confirm-beep-0', file: 'Light Drone Sound (button hover) 3.wav' },
+          { name: 'confirm-beep-1', file: 'Light Drone Sound (button hover) 7.wav' },
+          { name: 'confirm-beep-2', file: 'Light Drone Sound (button hover) 9.wav' },
+          { name: 'confirm-beep-3', file: 'Light Drone Sound (button hover) 11.wav' }
+        ]
+
+        const availableMusicTracks = [
+          { name: 'main-theme', file: 'Undergrowth (Loopable).mp3' },
+        ]
+
+        /* Set up audio */
+        this.AudioSetup(availableSoundEffects, availableMusicTracks)
+
         /* Initiates the nickname state */
         this.DisplayNicknameState()
+    }
+
+    AudioSetup (availableSoundEffects, availableMusicTracks) {
+      // Sets up a custom event listener that will play sounds on messages from sub-components
+      this.addEventListener('playSFX', (event) => {
+        const audioElement = this.shadowRoot.querySelector('#sound-effects audio#' + event.detail.name)
+        console.log(event.detail.name)
+        if (audioElement != null) {
+          audioElement.fastSeek(0)
+          audioElement.play()
+        }
+      })
+
+      function AddAudioElementsFromAvailableSoundsArray (containerSelector, basePath, array, type) {
+        const soundsContainerElement = containerSelector
+        array.forEach(element => {
+          const newAudioElement = document.createElement('audio')
+          newAudioElement.id = element.name
+          newAudioElement.textContent = 'Your browser does not support the audio element.'
+          const newSourceElement = document.createElement('source')
+          newSourceElement.setAttribute('src', basePath + element.file)
+          newSourceElement.setAttribute('type', type)
+          newAudioElement.appendChild(newSourceElement)
+          soundsContainerElement.appendChild(newAudioElement)
+        })
+      }
+
+      AddAudioElementsFromAvailableSoundsArray(
+        this.shadowRoot.querySelector('#sound-effects'), sfxPath, availableSoundEffects, 'audio/wav')
+      AddAudioElementsFromAvailableSoundsArray(
+        this.shadowRoot.querySelector('#music-tracks'), musicPath, availableMusicTracks, 'audio/mp3')
     }
 
     /**
@@ -157,6 +197,9 @@ customElements.define('tic-tac-toe',
         this.userNickname = e.detail.nickname
         this.totalTime = 0
         this.gameType = e.detail.game
+        const selectedSoundEffect = this.getRndInteger(0, 4)
+        this.dispatchEvent(new window.CustomEvent(
+          'playSFX', { detail: { name: 'confirm-beep-' + selectedSoundEffect } }))
         this.DisplayMemoryGameState()
       })
     }
@@ -173,7 +216,14 @@ customElements.define('tic-tac-toe',
       memoryState.InheritStyle(this.shadowRoot.querySelector('style'))
       this.currentState = this._pwdApp.appendChild(memoryState)
       this.currentState.StartGameAPIGet(this.gameType)
-      this.currentState.addEventListener('allpairsfound', (event) => {
+      this.currentState.addEventListener('playSFX', (event) => {
+        const audioElement = this.shadowRoot.querySelector('#sound-effects audio#' + event.detail.name)
+        console.log(event.detail.name)
+        if (audioElement != null) {
+          audioElement.play()
+        }
+      })
+      this.currentState.addEventListener('gameOver', (event) => {
         const message = [
           'Congratulations ' + this.userNickname + '!',
           'You finished the ' + this.gameType + ' difficulty ' + 'with ' + event.detail.mistakes + ' mistakes,',
@@ -316,6 +366,10 @@ customElements.define('tic-tac-toe',
         document.onmouseup = null
         document.onmousemove = null
       }
+    }
+
+    getRndInteger(min, max) {
+      return Math.floor(Math.random() * (max - min) ) + min;
     }
 
     /**
