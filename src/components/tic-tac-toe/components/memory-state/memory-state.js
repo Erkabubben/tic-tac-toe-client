@@ -97,13 +97,10 @@ customElements.define('memory-state',
       this._timerCounter = this.shadowRoot.querySelector('#timercounter')
       this._countdownTimer = this.shadowRoot.querySelector('#countdown-timer')
 
-      /* Reference to the available card motifs in the img folder */
-      this._cardMotifs = [
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        '10', '11', '12', '13', '14', '15', '16', '17', '18'
-      ]
-
       this.cardSize = 96 // Default card size
+
+      this.playerSymbol = 'o'
+      this.opponentSymbol = 'x'
 
       /* Reference for setting the size of the cards depending on game type */
       this.cardSizes = {
@@ -182,7 +179,7 @@ customElements.define('memory-state',
           const newCard = document.createElement('flipping-tile')
           newCard.setAttribute('backsideColor', 'yellow')
           newCard.setAttribute('backsideImage', 'backside.jpg')
-          newCard.SetSize(96, 96)
+          newCard.SetSize(160, 160)
           newCard.setAttribute('tabindex', '-1')
           //newCardImg.setAttribute('src', imagesPath + newCard.motif + '.jpg')
           newCard.setState('')
@@ -264,12 +261,12 @@ customElements.define('memory-state',
      * is equal to the _selectedCard property will be displayed as selected.
      */
     UpdateCardSelection () {
-      /*for (let i = 0; i < this._activeCards.length; i++) {
+      for (let i = 0; i < this._activeCards.length; i++) {
         const card = this._activeCards[i]
         if (card.cardID === this._selectedCard) {
           card._div.focus()
         }
-      }*/
+      }
     }
 
     /**
@@ -279,35 +276,11 @@ customElements.define('memory-state',
      */
     FlipCard () {
       const card = this._activeCards[this._selectedCard]
-      if (this._amountOfCardsOfPairFlipped === 0 && card.hasAttribute('flipped')) {
-        this._amountOfCardsOfPairFlipped++
-        this._cardsOfPair1 = card.cardID
-        card.flipTile()
-      } else if (this._amountOfCardsOfPairFlipped === 1 && card.hasAttribute('flipped')) {
-        this._amountOfCardsOfPairFlipped++
-        this._cardsOfPair2 = card.cardID
-        card.flipTile()
-        const card1 = this._activeCards[this._cardsOfPair1]
-        const card2 = this._activeCards[this._cardsOfPair2]
-        if (card1.motif !== card2.motif) { // Cards do not match
-          this._cardsPairTimeout = setTimeout(() => {
-            card1.flipTile()
-            card2.flipTile()
-            this._amountOfCardsOfPairFlipped = 0
-            this._mistakes++
-            this._mistakesCounter.textContent = this._mistakes
-            clearTimeout(this._cardsPairTimeout)
-          }, 1500)
-        } else { // Cards are a valid pair
-          this._amountOfCardsOfPairFlipped = 0
-          card1.HideAndDeactivate()
-          card2.HideAndDeactivate()
-          this._pairsFound++
-          this._pairsFoundCounter.textContent = this._pairsFound + ' / ' + (this._startingCardsAmount / 2)
-          if (this._pairsFound === (this._startingCardsAmount / 2)) {
-            this.dispatchEvent(new window.CustomEvent('allpairsfound', { detail: { time: this._countdownTimer.counterCurrentTime, mistakes: this._mistakes } }))
-          }
-        }
+      if (card.getAttribute('state') == this.playerSymbol
+        || card.getAttribute('state') == this.opponentSymbol) {
+      
+      } else {
+        card.setState(this.playerSymbol)
       }
     }
 
