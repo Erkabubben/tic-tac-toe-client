@@ -53,6 +53,9 @@ template.innerHTML = `
       transform: translate(-50%, -50%);
       user-select: none;
     }
+    img.hidden {
+      display: none;
+    }
     flipping-tile::part(show) {
       display: block;
     }
@@ -69,9 +72,8 @@ template.innerHTML = `
     }
   </style>
   <div tabindex="-1" id="content">
-    <slot>
-    </slot>
-    <img id="backside" src="` + imagesPath + `lnu-symbol.png">
+    <img id="x" src="` + imagesPath + `x.png">
+    <img id="o" src="` + imagesPath + `o.png">
   </div>
   <style id="size">
     div {
@@ -101,9 +103,8 @@ customElements.define('flipping-tile',
         .appendChild(template.content.cloneNode(true))
 
       this._div = this.shadowRoot.querySelector('div')
-      this._slot = this._div.querySelector('slot')
-      this._backside = this._div.querySelector('img#backside')
-      this._backsideStyle = this.shadowRoot.querySelector('#backsideStyle')
+      this._xImg = this._div.querySelector('img#x')
+      this._oImg = this._div.querySelector('img#o')
 
       this._styleSize = this.shadowRoot.querySelector('style#size')
       this.width = 0
@@ -147,7 +148,7 @@ customElements.define('flipping-tile',
      * @returns {string[]} observedAttributes array
      */
     static get observedAttributes () {
-      return ['flipped']
+      return ['state']
     }
 
     /**
@@ -165,16 +166,15 @@ customElements.define('flipping-tile',
      * Updates the tile to show either the front or the backside.
      */
     updateImageSrcAttribute () {
-      // Set tile to show backside
-      if (this.hasAttribute('flipped')) {
-        this._div.classList.add('backsideUp')
-        this._slot.setAttribute('part', 'hide')
-        this._backside.setAttribute('part', 'show')
-      // Set tile to show front
+      if (this.getAttribute('state') == 'x') {
+        this._oImg.classList.add('hidden')
+        this._xImg.classList.remove('hidden')
+      } else if (this.getAttribute('state') == 'o') {
+        this._xImg.classList.add('hidden')
+        this._oImg.classList.remove('hidden')
       } else {
-        this._div.classList.remove('backsideUp')
-        this._backside.setAttribute('part', 'hide')
-        this._slot.setAttribute('part', 'show')
+        this._oImg.classList.add('hidden')
+        this._xImg.classList.add('hidden')
       }
     }
 
@@ -182,31 +182,15 @@ customElements.define('flipping-tile',
      * Called after the element is inserted into the DOM.
      */
     connectedCallback () {
-      // Change backside color if backsideColor attribute has been set
-      if (this.hasAttribute('backsideColor')) {
-        this._backsideStyle.textContent = `div.backsideUp {
-                                              background-color: ` + this.getAttribute('backsideColor') + `;
-                                          }`
-      }
-      // Change backside image if backsideImage attribute has been set
-      if (this.hasAttribute('backsideImage')) {
-        this._backside.setAttribute('src', imagesPath + this.getAttribute('backsideImage'))
-      }
+
     }
 
     /**
      * Flips the tile and dispatches a 'tileflip' event with the tile's innerHTML value.
      */
-    flipTile () {
-      if (this.hasAttribute('flipped')) {
-        this.removeAttribute('flipped')
-      } else {
-        this.setAttribute('flipped', true)
-      }
-      let printMessage = 'Front side is now up. ' + this.shadowRoot.innerHTML
-      if (this.hasAttribute('flipped')) {
-        printMessage = 'Back side is now up. ' + this.shadowRoot.innerHTML
-      }
+    setState (newState) {
+      this.setAttribute('state', newState)
+      let printMessage = 'State is now ' + this.getAttribute('state')
       this.dispatchEvent(new window.CustomEvent('tileflip', { detail: printMessage }))
       this.updateImageSrcAttribute()
     }

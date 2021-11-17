@@ -71,7 +71,7 @@ template.innerHTML = `
       padding: 0;
       top: 0;
     }
-    #pwd-app {
+    #main {
       position: absolute;
     }
     #nickname-state, #memory-state, #message-state, #highscore-state {

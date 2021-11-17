@@ -167,42 +167,25 @@ customElements.define('memory-state',
      * @param {string} gameType - The game type selected in the nickname state.
      */
     InitiateGame (gameType) {
-      this._lineLength = gameType.charAt(0)
-      this._linesAmount = gameType.charAt(2)
+      this._pairsFoundCounter.textContent = '0'
+      this._mistakesCounter.textContent = '0'
+
+      this._lineLength = 3
+      this._linesAmount = 3
 
       this._startingCardsAmount = this._lineLength * this._linesAmount
-
-      this._pairsFoundCounter.textContent = this._pairsFound + ' / ' + (this._startingCardsAmount / 2)
-      this._mistakesCounter.textContent = this._mistakes
-
-      let cardMotifs = this._cardMotifs.slice()
-
-      cardMotifs = this.Shuffle(cardMotifs)
-
-      let cards = []
-
-      for (let i = 0; i < (this._startingCardsAmount / 2); i++) {
-        const element = cardMotifs[i]
-        cards.push(element)
-        cards.push(element)
-      }
-
-      cards = this.Shuffle(cards)
 
       let k = 0
       for (let i = 0; i < this._linesAmount; i++) {
         const newCardLine = document.createElement('div')
         for (let j = 0; j < this._lineLength; j++) {
           const newCard = document.createElement('flipping-tile')
-          const newCardImg = document.createElement('img')
           newCard.setAttribute('backsideColor', 'yellow')
           newCard.setAttribute('backsideImage', 'backside.jpg')
-          newCard.SetSize(this.cardSizes[gameType], this.cardSizes[gameType])
-          newCard.motif = cards.pop()
+          newCard.SetSize(96, 96)
           newCard.setAttribute('tabindex', '-1')
-          newCardImg.setAttribute('src', imagesPath + newCard.motif + '.jpg')
-          newCard.appendChild(newCardImg)
-          newCard.flipTile()
+          //newCardImg.setAttribute('src', imagesPath + newCard.motif + '.jpg')
+          newCard.setState('')
           newCard.row = i
           newCard.column = j
           newCard.cardID = k
@@ -281,12 +264,12 @@ customElements.define('memory-state',
      * is equal to the _selectedCard property will be displayed as selected.
      */
     UpdateCardSelection () {
-      for (let i = 0; i < this._activeCards.length; i++) {
+      /*for (let i = 0; i < this._activeCards.length; i++) {
         const card = this._activeCards[i]
         if (card.cardID === this._selectedCard) {
           card._div.focus()
         }
-      }
+      }*/
     }
 
     /**
