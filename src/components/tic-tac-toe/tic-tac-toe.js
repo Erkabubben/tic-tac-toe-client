@@ -137,7 +137,7 @@ customElements.define('tic-tac-toe',
         ]
 
         const availableMusicTracks = [
-          { name: 'main-theme', file: 'Undergrowth (Loopable).mp3' },
+          { name: 'main-theme', file: 'Undergrowth (Loopable).mp3', volume: 0.5 },
         ]
 
         /* Set up audio */
@@ -150,12 +150,11 @@ customElements.define('tic-tac-toe',
     AudioSetup (availableSoundEffects, availableMusicTracks) {
       // Sets up a custom event listener that will play sounds on messages from sub-components
       this.addEventListener('playSFX', (event) => {
-        const audioElement = this.shadowRoot.querySelector('#sound-effects audio#' + event.detail.name)
-        console.log(event.detail.name)
-        if (audioElement != null) {
-          audioElement.fastSeek(0)
-          audioElement.play()
-        }
+        this.PlaySound('sfx', event)
+      })
+
+      this.addEventListener('playMusic', (event) => {
+        this.PlaySound('music', event)
       })
 
       function AddAudioElementsFromAvailableSoundsArray (containerSelector, basePath, array, type) {
@@ -164,6 +163,9 @@ customElements.define('tic-tac-toe',
           const newAudioElement = document.createElement('audio')
           newAudioElement.id = element.name
           newAudioElement.textContent = 'Your browser does not support the audio element.'
+          if (element.volume) {
+            newAudioElement.volume = element.volume
+          }
           const newSourceElement = document.createElement('source')
           newSourceElement.setAttribute('src', basePath + element.file)
           newSourceElement.setAttribute('type', type)
@@ -176,6 +178,16 @@ customElements.define('tic-tac-toe',
         this.shadowRoot.querySelector('#sound-effects'), sfxPath, availableSoundEffects, 'audio/wav')
       AddAudioElementsFromAvailableSoundsArray(
         this.shadowRoot.querySelector('#music-tracks'), musicPath, availableMusicTracks, 'audio/mp3')
+    }
+
+    PlaySound(type, event) {
+      const selector = type == 'sfx' ? '#sound-effects audio#' : '#music-tracks audio#'
+      const audioElement = this.shadowRoot.querySelector(selector + event.detail.name)
+      console.log(event.detail.name)
+      if (audioElement != null) {
+        audioElement.fastSeek(0)
+        audioElement.play()
+      }
     }
 
     /**
@@ -199,6 +211,8 @@ customElements.define('tic-tac-toe',
         this.gameType = e.detail.game
         const selectedSoundEffect = this.getRndInteger(0, 4)
         this.dispatchEvent(new window.CustomEvent(
+          'playMusic', { detail: { name: 'main-theme' } }))
+        this.dispatchEvent(new window.CustomEvent(
           'playSFX', { detail: { name: 'confirm-beep-' + selectedSoundEffect } }))
         this.DisplayMemoryGameState()
       })
@@ -217,11 +231,7 @@ customElements.define('tic-tac-toe',
       this.currentState = this._pwdApp.appendChild(memoryState)
       this.currentState.StartGameAPIGet(this.gameType)
       this.currentState.addEventListener('playSFX', (event) => {
-        const audioElement = this.shadowRoot.querySelector('#sound-effects audio#' + event.detail.name)
-        console.log(event.detail.name)
-        if (audioElement != null) {
-          audioElement.play()
-        }
+        this.PlaySound('sfx', event)
       })
       this.currentState.addEventListener('gameOver', (event) => {
         const message = [
