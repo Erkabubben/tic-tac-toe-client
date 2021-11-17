@@ -115,17 +115,17 @@ customElements.define('memory-state',
 
       /* The total amount of cards, rows and columns at the start of the game  - set from
          the gameType parameter by InitiateGame() */
-      this._startingCardsAmount = 0
+      this._startingTilesAmount = 0
       this._lineLength = 0
       this._linesAmount = 0
 
       /* Properties for tracking which card is currently selected */
-      this._selectedCard = 0
-      this._selectedCardRow = 0
-      this._selectedCardColumn = 0
+      this._selectedTile = 0
+      this._selectedTileRow = 0
+      this._selectedTileColumn = 0
 
       /* The ID's of the cards in the current game */
-      this._activeCards = []
+      this._activeTiles = []
 
       /* References for easy conversions between card ID and column/row numbers */
       this._cardsColumnRowToID = {}
@@ -144,7 +144,7 @@ customElements.define('memory-state',
       /* Event Listener that will set focus to the previously selected element when
          clicking inside the state */
       this.addEventListener('click', () => {
-        this.UpdateCardSelection()
+        this.UpdateTileSelection()
       })
     }
 
@@ -177,33 +177,38 @@ customElements.define('memory-state',
       this._lineLength = 3
       this._linesAmount = 3
 
-      this._startingCardsAmount = this._lineLength * this._linesAmount
+      this._startingTilesAmount = this._lineLength * this._linesAmount
 
       let k = 0
       for (let i = 0; i < this._linesAmount; i++) {
         const newCardLine = document.createElement('div')
         for (let j = 0; j < this._lineLength; j++) {
-          const newCard = document.createElement('flipping-tile')
-          newCard.setAttribute('backsideColor', 'yellow')
-          newCard.setAttribute('backsideImage', 'backside.jpg')
-          newCard.SetSize(160, 160)
-          newCard.setAttribute('tabindex', '-1')
+          const newTile = document.createElement('flipping-tile')
+          newTile.setAttribute('backsideColor', 'yellow')
+          newTile.setAttribute('backsideImage', 'backside.jpg')
+          newTile.SetSize(160, 160)
+          newTile.setAttribute('tabindex', '-1')
           //newCardImg.setAttribute('src', imagesPath + newCard.motif + '.jpg')
-          newCard.setState('')
-          newCard.row = i
-          newCard.column = j
-          newCard.cardID = k
-          newCard.addEventListener('click', event => {
+          newTile.setState('')
+          newTile.row = i
+          newTile.column = j
+          newTile.cardID = k
+          newTile.addEventListener('click', event => {
             if (event.button === 0) {
-              this._selectedCardColumn = newCard.column
-              this._selectedCardRow = newCard.row
-              this._selectedCard = newCard.cardID
-              this.UpdateCardSelection()
-              this.FlipCard()
+              this._selectedTileColumn = newTile.column
+              this._selectedTileRow = newTile.row
+              this._selectedTile = newTile.cardID
+              this.UpdateTileSelection()
+              const tile = this._activeTiles[this._selectedTile]
+              if (tile.getAttribute('state') != this.playerSymbol
+                && tile.getAttribute('state') != this.opponentSymbol) {
+                  tile.setState(this.playerSymbol)
+                  this.PlayerMoveAPIPost(this._selectedTile)
+              }
             }
           })
-          newCardLine.appendChild(newCard)
-          this._activeCards.push(newCard)
+          newCardLine.appendChild(newTile)
+          this._activeTiles.push(newTile)
           this._cardsColumnRowToID[j + ',' + i] = k
           this._cardsIDToColumnRow[k] = j + ',' + i
           k++
@@ -211,7 +216,7 @@ customElements.define('memory-state',
         this._cardsArea.appendChild(newCardLine)
       }
 
-      this.UpdateCardSelection()
+      this.UpdateTileSelection()
 
       /**
        * Function to be called whenever a key on the keyboard is pressed.
@@ -221,30 +226,35 @@ customElements.define('memory-state',
       this.keyDownFunction = (event) => {
         if (event.keyCode === 39 || event.keyCode === 68) { // Right arrowkey
           event.preventDefault()
-          this._selectedCardColumn = (this._selectedCardColumn + 1) % this._lineLength
+          this._selectedTileColumn = (this._selectedTileColumn + 1) % this._lineLength
         } else if (event.keyCode === 37 || event.keyCode === 65) { // Left arrowkey
           event.preventDefault()
-          this._selectedCardColumn = (this._selectedCardColumn - 1)
-          if (this._selectedCardColumn < 0) {
-            this._selectedCardColumn = this._lineLength - 1
+          this._selectedTileColumn = (this._selectedTileColumn - 1)
+          if (this._selectedTileColumn < 0) {
+            this._selectedTileColumn = this._lineLength - 1
           }
         } else if (event.keyCode === 40 || event.keyCode === 83) { // Down arrowkey
           event.preventDefault()
-          this._selectedCardRow = (this._selectedCardRow + 1) % this._linesAmount
+          this._selectedTileRow = (this._selectedTileRow + 1) % this._linesAmount
         } else if (event.keyCode === 38 || event.keyCode === 87) { // Up arrowkey
           event.preventDefault()
-          this._selectedCardRow = (this._selectedCardRow - 1)
-          if (this._selectedCardRow < 0) {
-            this._selectedCardRow = this._linesAmount - 1
+          this._selectedTileRow = (this._selectedTileRow - 1)
+          if (this._selectedTileRow < 0) {
+            this._selectedTileRow = this._linesAmount - 1
           }
         }
 
-        this._selectedCard = this._cardsColumnRowToID[this._selectedCardColumn + ',' + this._selectedCardRow]
-        this.UpdateCardSelection()
+        this._selectedTile = this._cardsColumnRowToID[this._selectedTileColumn + ',' + this._selectedTileRow]
+        this.UpdateTileSelection()
         if (event.keyCode === 13) {
           event.preventDefault()
-          this.UpdateCardSelection()
-          this.FlipCard()
+          this.UpdateTileSelection()
+          const tile = this._activeTiles[this._selectedTile]
+          if (tile.getAttribute('state') != this.playerSymbol
+            && tile.getAttribute('state') != this.opponentSymbol) {
+              tile.setState(this.playerSymbol)
+              this.PlayerMoveAPIPost(this._selectedTile)
+          }
         }
         this.removeEventListener('keydown', this.keyDownFunction)
       }
@@ -271,13 +281,18 @@ customElements.define('memory-state',
      */
     async PlayerMoveAPIPost (move) {
       try {
-        const response = await window.fetch(this._playerMovePostBaseUri + move, {
+        const moveJSONstringified = await JSON.stringify({ "position": move })
+        const response = await window.fetch(this._playerMovePostBaseUri + this._currentGameID, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: answerJSONstringified
+          body: moveJSONstringified
         })
         const responseJSON = await response.json() // Parse response to JSON object
         console.log(responseJSON)
+        console.log(responseJSON.moves)
+        const opponentResponseTileID = responseJSON.moves[responseJSON.moves.length - 1].position
+        const opponentResponseTile = this._activeTiles[opponentResponseTileID]
+        opponentResponseTile.setState(this.opponentSymbol)
       // Error handling
       } catch (error) {
         console.log('Error on fetch request!')
@@ -339,10 +354,10 @@ customElements.define('memory-state',
      * Updates the 'part' attribute of each card, so that only the card whose cardID
      * is equal to the _selectedCard property will be displayed as selected.
      */
-    UpdateCardSelection () {
-      for (let i = 0; i < this._activeCards.length; i++) {
-        const card = this._activeCards[i]
-        if (card.cardID === this._selectedCard) {
+    UpdateTileSelection () {
+      for (let i = 0; i < this._activeTiles.length; i++) {
+        const card = this._activeTiles[i]
+        if (card.cardID === this._selectedTile) {
           card._div.focus()
         }
       }
@@ -353,35 +368,14 @@ customElements.define('memory-state',
      * If one card has already been flipped, the method will check whether the
      * the two cards are a match.
      */
-    FlipCard () {
-      const card = this._activeCards[this._selectedCard]
-      if (card.getAttribute('state') == this.playerSymbol
-        || card.getAttribute('state') == this.opponentSymbol) {
+    SetStateOfTile (tileID) {
+      const tile = this._activeTiles[tileID]
+      if (tile.getAttribute('state') == this.playerSymbol
+        || tile.getAttribute('state') == this.opponentSymbol) {
       
       } else {
-        card.setState(this.playerSymbol)
+        tile.setState(this.playerSymbol)
       }
-    }
-
-    /**
-     * Shuffles the array of cards.
-     *
-     * @param {Array} cards - The array of objects to shuffle.
-     * @returns {Array} The shuffled array of objects.
-     */
-    Shuffle (cards) {
-      let i = cards.length
-      let j
-      let x
-
-      while (i) {
-        j = (Math.random() * i) | 0 // using bitwise OR 0 to floor a number
-        x = cards[--i]
-        cards[i] = cards[j]
-        cards[j] = x
-      }
-
-      return cards
     }
 
     /**
