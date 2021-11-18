@@ -32,7 +32,7 @@ template.innerHTML = `
       overflow: hidden;
     }
     h1, h2 {
-      font-family: Verdana;
+      font-family: "Lucida Handwriting", cursive;
       text-align: center;
       color: black;
       margin: 16px;
@@ -51,13 +51,11 @@ template.innerHTML = `
       box-shadow: 1px 1px 1px black;
     }
     button:active {
-      border: 6px outset #333333;
       transform: translate(1px, 1px);
       box-shadow: 0px 0px 0px black;
     }
     button:hover {
       background-color: #999999;
-      border-color: #999999;
     }
     :host {
       margin: 0;
@@ -76,7 +74,7 @@ template.innerHTML = `
       background-image: url("${imagesPath}paper-bg.jpg");
     }
     #message-state h2 {
-      color: orange;
+      color: black;
       text-align: center;
     }
     #highscore-state table {
@@ -87,6 +85,44 @@ template.innerHTML = `
     }
     p, h1, h2 {
       user-select: none;
+    }
+    /* Animation code */
+    @keyframes note-appear {
+      from {
+        opacity: 0.5;
+        top: -500px;
+        transform: translate(-50%, -50%) rotate(45deg)
+      }
+      to {
+        opacity: 1.0;
+        top: 50%;
+        transform: translate(-50%, -50%) rotate(0deg)
+      }
+    }
+    /* Element to apply animation to */
+    .note-appear {
+      animation-name: note-appear;
+      animation-duration: 0.75s;
+      animation-timing-function: ease-out;
+    }
+    /* Animation code */
+    @keyframes note-disappear {
+      from {
+        opacity: 1.0;
+        top: 50%;
+        transform: translate(-50%, -50%) rotate(0deg)
+      }
+      to {
+        opacity: 0.5;
+        top: 1200px;
+        transform: translate(-50%, -50%) rotate(-45deg)
+      }
+    }
+    /* Element to apply animation to */
+    .note-disappear {
+      animation-name: note-disappear;
+      animation-duration: 0.75s;
+      animation-timing-function: ease-in;
     }
   </style>
   <style id="size"></style>
@@ -363,83 +399,6 @@ customElements.define('tic-tac-toe',
         width: ` + width + `px;
         height: ` + height + `px;
       }`
-    }
-
-    /**
-     * Allows for a HTML element to be dragged by the mouse, within the boundaries of
-     * the parent element. Modified version of code found at:
-     * https://www.w3schools.com/howto/howto_js_draggable.asp.
-     *
-     * @param {HTMLElement} elmnt - The element that should have drag functionality.
-     */
-    dragElement (elmnt) {
-      let mouseDiffX = 0
-      let mouseDiffY = 0
-      const applicationWidth = this.width
-      const applicationHeight = this.height
-
-      if (elmnt.header != null) {
-        // If present, the header is where you move the DIV from:
-        elmnt.header.onmousedown = dragMouseDown
-      } else {
-        // Otherwise, move the DIV from anywhere inside the DIV:
-        elmnt.onmousedown = dragMouseDown
-      }
-
-      /**
-       * Called when initiating the drag motion by clicking the element.
-       * Sets up Event Listeners for the elementDrag and closeDragElement functions.
-       *
-       * @param {event} e - The 'mousedown' event.
-       */
-      function dragMouseDown (e) {
-        e = e || window.event
-        e.preventDefault()
-        // Get the mouse cursor position at startup:
-        mouseDiffX = e.clientX - elmnt.x
-        mouseDiffY = e.clientY - elmnt.y
-        document.onmouseup = closeDragElement
-        // Call a function whenever the cursor moves:
-        document.onmousemove = elementDrag
-      }
-
-      /**
-       * Called whenever the mouse is moved while the element is set to being dragged.
-       * The element will change position in relation to the mouse pointer, but will
-       * not be moved outside the boundaries of its parent.
-       *
-       * @param {event} e - The 'mousemove' event.
-       */
-      function elementDrag (e) {
-        e = e || window.event
-        e.preventDefault()
-        // Adjust to parent boundaries
-        let x = e.clientX - mouseDiffX
-        let y = e.clientY - mouseDiffY
-        if (x + elmnt.width >= applicationWidth) {
-          x = applicationWidth - elmnt.width
-        }
-        if (x < 0) {
-          x = 0
-        }
-        if (y + elmnt.height >= applicationHeight) {
-          y = applicationHeight - elmnt.height
-        }
-        if (y < 0) {
-          y = 0
-        }
-        // Set the element's new position:
-        elmnt.SetPosition(x, y)
-      }
-
-      /**
-       * Removes the registered Event Listeners when the mouse button is released.
-       */
-      function closeDragElement () {
-        // Stop moving when mouse button is released:
-        document.onmouseup = null
-        document.onmousemove = null
-      }
     }
 
     getRndInteger(min, max) {

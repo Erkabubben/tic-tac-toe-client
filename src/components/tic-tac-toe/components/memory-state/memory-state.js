@@ -7,7 +7,7 @@
 import './components/flipping-tile/index.js'
 import './components/countdown-timer/index.js'
 const pathToModule = import.meta.url
-const imagesPath = new URL('./components/flipping-tile/images/', pathToModule)
+const imagesOfParentPath = new URL('../../img/', pathToModule)
 
 /**
  * Define template.
@@ -36,27 +36,55 @@ template.innerHTML = `
       left: 50%;
       transform: translate(-50%, -50%);
     }
+    #h-line-0, #h-line-1 {
+      position: absolute;
+      top: 0px;
+      background-color: grey;
+      width: 4px;
+      height: 100%;
+    }
+    #h-line-0 {
+      left: 33%;
+    }
+    #h-line-1 {
+      right: 33%;
+    }
+    #v-line-0, #v-line-1 {
+      position: absolute;
+      left: 0px;
+      background-color: grey;
+      width: 100%;
+      height: 4px;
+    }
+    #v-line-0 {
+      top: 33%;
+    }
+    #v-line-1 {
+      bottom: 33%;
+    }
     #ui-area {
       position: absolute;
-      background-color: #222222;
+      background-image: url("${imagesOfParentPath}square-paper-bg-0.jpg");
       width: 20%;
       height: 100%;
       right: 0px;
       top: 0px;
-      border: 4px outset #222222;
+      border-left: 4px outset #888888;
     }
-    h1 {
-      color: white;
-      font-size: 1.25rem;
+    #ui-area h1 {
+      color: black;
+      font-size: 1.5rem;
       text-align: center;
-    }
-    :focus {
-      box-shadow: 0px 0px 2px 2px red;
     }
   </style>
   <div id="memory-state">
     <div id="game-area">
-      <div id="cards-area"></div>
+      <div id="cards-area">
+        <div id="h-line-0"></div>
+        <div id="h-line-1"></div>
+        <div id="v-line-0"></div>
+        <div id="v-line-1"></div>
+      </div>
     </div>
     <div id="ui-area">
       <h1 id="gamenumbertext">Game Round:</h1>

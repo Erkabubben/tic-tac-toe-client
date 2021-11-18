@@ -4,6 +4,8 @@
  * @author Erik Lindholm <elimk06@student.lnu.se>
  * @version 1.0.0
  */
+const pathToModule = import.meta.url
+const imagesOfParentPath = new URL('../../img/', pathToModule)
 
 /**
  * Define template.
@@ -23,8 +25,8 @@ template.innerHTML = `
       left: 50%;
       transform: translate(-50%, -50%);
       max-width: 80%;
-      background-color: #222222;
-      border: 6px outset #666666;
+      background-image: url("${imagesOfParentPath}square-paper-bg-0.jpg");
+      border: 3px outset #999999;
       padding: 24px;
     }
   </style>
@@ -59,6 +61,8 @@ customElements.define('message-state',
       this._messageContainer = this.shadowRoot.querySelector('#message-container')
       this._message = this._messageState.querySelector('h2')
 
+      this._messageContainer.classList.add('note-appear')
+
       /* Countdown properties */
       this._timeLimitInMS = 4000
       this._countdownTimeout = 0
@@ -76,6 +80,14 @@ customElements.define('message-state',
         const msgLine = document.createElement('h2')
         msgLine.textContent = element
         this._messageContainer.appendChild(msgLine)
+      })
+    }
+
+    async AwaitAnimationEnd (element) {
+      return new Promise(function (resolve, reject) {
+        element.addEventListener('animationend', () => {
+          resolve()
+        })
       })
     }
 
@@ -110,8 +122,15 @@ customElements.define('message-state',
       /* Initialize countdown */
       this._countdownTimeout = setTimeout(() => {
         clearTimeout(this._countdownTimeout)
-        this.dispatchEvent(new window.CustomEvent('messagetimerzero'))
+        this.CountdownHasReachedZero()
       }, this._timeLimitInMS)
+    }
+
+    async CountdownHasReachedZero () {
+      this._messageContainer.classList.remove('note-appear')
+      this._messageContainer.classList.add('note-disappear')
+      await this.AwaitAnimationEnd(this._messageContainer)
+      this.dispatchEvent(new window.CustomEvent('messagetimerzero'))
     }
 
     /**

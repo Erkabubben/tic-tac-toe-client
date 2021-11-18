@@ -14,13 +14,12 @@ const template = document.createElement('template')
 template.innerHTML = `
   <style>
     :host {
-      margin: 2px;
+      margin: 10px;
       display: inline-block;
     }
     div {
-      background-color: white;
-      border-radius: 8px;
-      border: solid black 2px;
+      background-color: none;
+      border-radius: 16px;
       transition: box-shadow 0.5s;
       position: relative;
       overflow: hidden;
@@ -63,7 +62,8 @@ template.innerHTML = `
       display: none;
     }
     :focus {
-      box-shadow: 0px 0px 0px 2px yellow;
+      box-shadow: 0px 0px 0px 4px red;
+      outline: none;
     }
     /* Animation code */
     @keyframes appear {
@@ -108,8 +108,8 @@ template.innerHTML = `
     }
   </style>
   <div tabindex="-1" id="content">
-    <img id="x" src="` + imagesPath + `x.png">
-    <img id="o" src="` + imagesPath + `o.png">
+    <img id="x">
+    <img id="o">
   </div>
   <style id="size">
     div {
@@ -142,6 +142,10 @@ customElements.define('flipping-tile',
       this._xImg = this._div.querySelector('img#x')
       this._oImg = this._div.querySelector('img#o')
       this.currentSymbolImg = null
+
+      this.imgVariant = this.getRndInteger(0, 3)
+      this._xImg.setAttribute('src', imagesPath + 'x' + this.imgVariant + '.png')
+      this._oImg.setAttribute('src', imagesPath + 'o' + this.imgVariant + '.png')
 
       this._styleSize = this.shadowRoot.querySelector('style#size')
       this.width = 0
@@ -202,6 +206,10 @@ customElements.define('flipping-tile',
     startWinnerAnimation () {
       this.currentSymbolImg.classList.remove('appearing-symbol')
       this.currentSymbolImg.classList.add('winner-symbol')
+    }
+
+    getRndInteger(min, max) {
+      return Math.floor(Math.random() * (max - min) ) + min;
     }
 
     /**

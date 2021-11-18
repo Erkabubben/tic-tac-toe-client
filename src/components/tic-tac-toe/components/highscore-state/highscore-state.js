@@ -4,6 +4,8 @@
  * @author Erik Lindholm <elimk06@student.lnu.se>
  * @version 1.0.0
  */
+const pathToModule = import.meta.url
+const imagesOfParentPath = new URL('../../img/', pathToModule)
 
 /**
  * Define template.
@@ -33,8 +35,8 @@ template.innerHTML = `
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background-color: #222222;
-      border: 6px outset #666666;
+      background-image: url("${imagesOfParentPath}square-paper-bg-0.jpg");
+      border: 3px outset #999999;
       width: max-content;
       padding: 24px;
     }
@@ -74,10 +76,13 @@ customElements.define('highscore-state',
 
       /* Set up properties */
       this._highscoreState = this.shadowRoot.querySelector('#highscore-state')
+      this._highscoreContainer = this._highscoreState.querySelector('#hs')
       this._highscoreTable = this._highscoreState.querySelector('#highscoretable')
       this._mainheader = this._highscoreState.querySelector('h1')
       this._message = this._highscoreState.querySelector('h2')
       this._localStorageFileName = ''
+
+      this._highscoreContainer.classList.add('note-appear')
 
       /**
        * Dispatches an event when user clicks the mouse button to return to
@@ -118,10 +123,21 @@ customElements.define('highscore-state',
      * Notifies the parent element that the user is ready to move on from the
      * highscore screen.
      */
-    Proceed () {
+    async Proceed () {
       document.removeEventListener('click', this.dispatchClickEvent)
       document.removeEventListener('keydown', this.dispatchKeyEvent)
+      this._highscoreContainer.classList.remove('note-appear')
+      this._highscoreContainer.classList.add('note-disappear')
+      await this.AwaitAnimationEnd(this._highscoreContainer)
       this.dispatchEvent(new window.CustomEvent('proceedfromhighscores'))
+    }
+
+    async AwaitAnimationEnd (element) {
+      return new Promise(function (resolve, reject) {
+        element.addEventListener('animationend', () => {
+          resolve()
+        })
+      })
     }
 
     /**

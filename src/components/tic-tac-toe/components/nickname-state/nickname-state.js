@@ -121,13 +121,6 @@ template.innerHTML = `
       animation-timing-function: ease-out;
     }
 
-    h1 {
-      color: orange;
-      font-weight: bold;
-      font-size: 96px;
-      text-align: center;
-    }
-
     form {
       position: absolute;
       left: 50%;
@@ -141,6 +134,7 @@ template.innerHTML = `
     form input#nickname {
       position: absolute;
       transform: translate(-50% ,0 );
+      font-family: "Lucida Handwriting", cursive;
       left: 50%;
       font-size: 1.25rem;
     }
@@ -148,6 +142,9 @@ template.innerHTML = `
     form p {
       display: block;
       text-align: center;
+      font-family: "Lucida Handwriting", cursive;
+      color: black;
+      font-size: 150%;
     }
 
     form button {
@@ -167,11 +164,12 @@ template.innerHTML = `
     }
 
     :focus {
-      box-shadow: 0px 0px 1px 4px yellow;
+      box-shadow: 0px 0px 1px 6px red;
+      outline: none;
     }
 
     ::part(selected) {
-      box-shadow: 0px 0px 1px 4px yellow;
+      box-shadow: 0px 0px 1px 6px red;
     }
   </style>
   <div id="nickname-state">
@@ -186,7 +184,8 @@ template.innerHTML = `
     <form>
       <p>Enter a nickname: </p>
       <input type="text" id="nickname" class="selectable" autocomplete="off">
-      <br><br><br>
+      <br><br>
+      <p>Game Rounds: </p>
       <div id="alternatives"></div><br>
     </form>
   </div>
