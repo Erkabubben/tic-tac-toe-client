@@ -19,6 +19,108 @@ template.innerHTML = `
       display: block;
     }
 
+    img#pencils {
+      position: absolute;
+      height: 90%;
+      left: 35%;
+      transform: translate(-50%, 0 );
+    }
+
+    /* Animation code */
+    @keyframes pencils-appear {
+      from {
+        opacity: 0.0;
+        height: 130%;
+      }
+      to {
+        opacity: 1.0;
+        height: 90%;
+      }
+    }
+    /* Element to apply animation to */
+    #pencils {
+      animation-name: pencils-appear;
+      animation-iteration-count: 1;
+      animation-duration: 1s;
+      animation-timing-function: ease-out;
+    }
+
+    #game-title {
+      position: absolute;
+    }
+
+    #game-title-headers {
+      position: relative;
+      left: 25%;
+      top: 20%;
+    }
+
+    #game-title-headers h1 {
+      position: absolute;
+      font-size: 110px;
+      font-family: "Lucida Handwriting", cursive;
+    }
+
+    /* Animation code */
+    @keyframes tic-appear {
+      from {
+        opacity: 0.0;
+        top: -200px;
+      }
+      to {
+        opacity: 1.0;
+        top: 0px;
+      }
+    }
+
+    @keyframes tac-appear {
+      from {
+        opacity: 0.0;
+        left: 80%;
+      }
+      to {
+        opacity: 1.0;
+        left: 100px;
+      }
+    }
+
+    @keyframes toe-appear {
+      from {
+        opacity: 0.0;
+        top: 400px;
+      }
+      to {
+        opacity: 1.0;
+        top: 220px;
+      }
+    }
+
+    #tic {
+      left: 0px;
+      top: 0px;
+      animation-name: tic-appear;
+      animation-duration: 1s;
+      animation-timing-function: ease-out;
+    }
+
+    #tac {
+      color: #E31E24;
+      left: 100px;
+      top: 110px;
+      animation-name: tac-appear;
+      animation-duration: 1s;
+      animation-timing-function: ease-out;
+    }
+
+    #toe {
+      color: #008DD2;
+      left: 200px;
+      top: 220px;
+      animation-name: toe-appear;
+      animation-duration: 1s;
+      animation-timing-function: ease-out;
+    }
+
     h1 {
       color: orange;
       font-weight: bold;
@@ -27,6 +129,9 @@ template.innerHTML = `
     }
 
     form {
+      position: absolute;
+      left: 50%;
+      top: 20%;
       margin: auto;
       font-family: Verdana;
       color: white;
@@ -71,7 +176,12 @@ template.innerHTML = `
   </style>
   <div id="nickname-state">
     <br>
-    <img src="` + imagesOfParentPath + `logo.png">
+    <img id="pencils" src="` + imagesOfParentPath + `tic-tac-toe-pencils.png">
+    <div id="game-title-headers">
+      <h1 id="tic">Tic</h1>
+      <h1 id="tac">Tac</h1>
+      <h1 id="toe">Toe</h1>
+    </div>
     <br>
     <form>
       <p>Enter a nickname: </p>

@@ -65,7 +65,7 @@ template.innerHTML = `
     :focus {
       box-shadow: 0px 0px 0px 2px yellow;
     }
-    /* The animation code */
+    /* Animation code */
     @keyframes appear {
       from {
         opacity: 0.0;
@@ -78,12 +78,12 @@ template.innerHTML = `
         width: 100%;
       }
     }
-    /* The element to apply the animation to */
+    /* Element to apply animation to */
     .appearing-symbol {
       animation-name: appear;
       animation-duration: 0.25s;
     }
-    /* The animation code */
+    /* Animation code */
     @keyframes winner {
       from {
         height: 100%;
@@ -94,7 +94,7 @@ template.innerHTML = `
         width: 70%;
       }
     }
-    /* The element to apply the animation to */
+    /* Element to apply animation to */
     .winner-symbol {
       animation-name: winner;
       animation-iteration-count: 10;

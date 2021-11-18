@@ -26,7 +26,7 @@ const template = document.createElement('template')
 template.innerHTML = `
   <style>
     #main {
-      background-image: url("${imagesPath}mosaic.jpg");
+      background-image: url("${imagesPath}paper-bg.jpg");
       position: relative;
       display: block;
       overflow: hidden;
@@ -73,7 +73,7 @@ template.innerHTML = `
       padding: 0px;
       width: 100%;
       height: 100%;
-      background-image: url("${imagesPath}wallpaper.jpg");
+      background-image: url("${imagesPath}paper-bg.jpg");
     }
     #message-state h2 {
       color: orange;
