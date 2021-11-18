@@ -59,6 +59,8 @@ template.innerHTML = `
       <div id="cards-area"></div>
     </div>
     <div id="ui-area">
+      <h1 id="gamenumbertext">Game Round:</h1>
+      <h1 id="gamenumbercounter"></h1>
       <h1 id="winstext">Wins:</h1>
       <h1 id="winscounter"></h1>
       <h1 id="lossestext">Losses:</h1>
@@ -95,6 +97,7 @@ customElements.define('memory-state',
       this._winsCounter = this.shadowRoot.querySelector('#winscounter')
       this._lossesCounter = this.shadowRoot.querySelector('#lossescounter')
       this._tiesCounter = this.shadowRoot.querySelector('#tiescounter')
+      this._gameNumberCounter = this.shadowRoot.querySelector('#gamenumbercounter')
 
       this.cardSize = 96 // Default card size
 
@@ -161,6 +164,7 @@ customElements.define('memory-state',
       this._winsCounter.textContent = gameData.wins
       this._lossesCounter.textContent = gameData.losses
       this._tiesCounter.textContent = gameData.ties
+      this._gameNumberCounter.textContent = gameData.gamesPlayed + ' / ' + gameData.gameType
 
       this._lineLength = 3
       this._linesAmount = 3
@@ -271,8 +275,7 @@ customElements.define('memory-state',
           this.PlayConfirmSoundEffect()
           tile.setState(this.playerSymbol)
           await this.AwaitAnimationEnd(tile.currentSymbolImg)
-          this.PlayerMoveAPIPost(this._selectedTile)
-          this._disableAllInput = false
+          await this.PlayerMoveAPIPost(this._selectedTile)
       }
     }
 
@@ -289,7 +292,7 @@ customElements.define('memory-state',
      * @param {string} move - The URL of the question to be retrieved.
      */
     async PlayerMoveAPIPost (move) {
-      //try {
+      try {
         const moveJSONstringified = await JSON.stringify({ "position": move })
         const response = await window.fetch(this._playerMovePostBaseUri + this._currentGameID, {
           method: 'POST',
@@ -306,12 +309,14 @@ customElements.define('memory-state',
           await this.AwaitAnimationEnd(opponentResponseTile.currentSymbolImg)
         }
         if (responseJSON.gameOver) {
-          this.OnGameOver(responseJSON)
+          await this.OnGameOver(responseJSON)
+        } else {
+          this._disableAllInput = false
         }
       // Error handling
-      /*} catch (error) {
+      } catch (error) {
         console.log('Error on fetch request!')
-      }*/
+      }
     }
 
     async OnGameOver (json) {
@@ -324,12 +329,7 @@ customElements.define('memory-state',
           winnerTiles.forEach(tileID => {
             this._activeTiles[tileID].startWinnerAnimation()
           })
-          console.log(this._activeTiles)
-          console.log(winnerTiles[0])
-          console.log(this._activeTiles[winnerTiles[0]])
           await this.AwaitAnimationEnd(this._activeTiles[winnerTiles[0]].currentSymbolImg)
-          console.log('ANIM FINISH')
-          //this.dispatchEvent(new window.CustomEvent('gameOver', { detail: json.winner }))
         }
       }
       this._disableAllInput = false

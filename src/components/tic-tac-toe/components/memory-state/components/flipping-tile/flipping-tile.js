@@ -81,7 +81,7 @@ template.innerHTML = `
     /* The element to apply the animation to */
     .appearing-symbol {
       animation-name: appear;
-      animation-duration: 1s;
+      animation-duration: 0.25s;
     }
     /* The animation code */
     @keyframes winner {

@@ -108,7 +108,7 @@ customElements.define('nickname-state',
       this._alternatives = this.shadowRoot.querySelector('#alternatives')
 
       /* Sets up the game difficulties to choose from */
-      const gameTypes = ['1', '5', '10', '25']
+      const gameTypes = ['1', '3', '5', '10', '25']
 
       /* Creates a button for each element in the gameTypes array */
       gameTypes.forEach(element => {
@@ -120,7 +120,9 @@ customElements.define('nickname-state',
         newAlternative.addEventListener('click', (event) => { // Checks if the mouse has been clicked
           event.preventDefault()
           if (this._input.value.length > 2) {
-            this.dispatchEvent(new window.CustomEvent('nicknameSet', { detail: { nickname: this._input.value, game: newAlternative.value } }))
+            this.dispatchEvent(new window.CustomEvent(
+              'nicknameSet',
+              { detail: { nickname: this._input.value, game: newAlternative.value } }))
           }
         })
         //this._alternatives.appendChild(document.createElement('br'))

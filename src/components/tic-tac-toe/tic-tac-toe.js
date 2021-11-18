@@ -132,6 +132,7 @@ customElements.define('tic-tac-toe',
         this.losses = 0
         this.ties = 0
         this.score = 0
+        this.gamesPlayed = 0
 
         const availableSoundEffects = [
           { name: 'confirm-beep-0', file: 'Light Drone Sound (button hover) 3.wav' },
@@ -212,11 +213,12 @@ customElements.define('tic-tac-toe',
       this.currentState.addEventListener('nicknameSet', (e) => {
         this.userNickname = e.detail.nickname
         this.totalTime = 0
-        this.gameType = e.detail.game
+        this.gameType = Number(e.detail.game)
         this.wins = 0
         this.losses = 0
         this.ties = 0
         this.score = 0
+        this.gamesPlayed = 0
         const selectedSoundEffect = this.getRndInteger(0, 4)
         this.dispatchEvent(new window.CustomEvent(
           'playSFX', { detail: { name: 'confirm-beep-' + selectedSoundEffect } }))
@@ -238,26 +240,72 @@ customElements.define('tic-tac-toe',
       memoryState.InheritStyle(this.shadowRoot.querySelector('style'))
       this.currentState = this._pwdApp.appendChild(memoryState)
       this.currentState.StartGameAPIGet(
-        { gameType: this.gameType, wins: this.wins, losses: this.losses, ties: this.ties } )
+        { gameType: this.gameType,
+          wins: this.wins,
+          losses: this.losses,
+          ties: this.ties,
+          score: this.score,
+          gamesPlayed: this.gamesPlayed })
       this.currentState.addEventListener('playSFX', (event) => {
         this.PlaySound('sfx', event)
       })
       this.currentState.addEventListener('gameOver', (event) => {
-        if (event.detail === 'PLAYER') {
+        if (event.detail === null) {
+          this.ties++
+        } else if (event.detail === 'PLAYER') {
           this.wins++
         } else if (event.detail === 'AI') {
           this.losses++
         } else {
           this.ties++
         }
-        this.DisplayMemoryGameState()
-        /*const message = [
-          'Congratulations ' + this.userNickname + '!',
-          'You finished the ' + this.gameType + ' difficulty ' + 'with ' + event.detail.mistakes + ' mistakes,',
-          'at ' + (event.detail.time * 0.001) + ' seconds.'
-        ]
-        this.DisplayTimedMessage(message, 3000, (e) => { this.DisplayHighscoreState(event.detail.mistakes, event.detail.time) })*/
+        this.UpdateScoreFromWinsLossesAndTies()
+        this.UpdateGamesPlayed()
+        if (this.gamesPlayed === this.gameType) {
+          this.AllGameRoundsHaveFinished()
+        } else {
+          this.DisplayMemoryGameState()
+        }
       })
+    }
+
+    AllGameRoundsHaveFinished() {
+      if (this.gameType === 1) {
+        this.DisplayNicknameState()
+      } else {
+        let message = null
+        if (this.score === this.gameType) {
+          message = [
+            `Congratulations ${this.userNickname}!
+            You won all ${this.wins} games!!
+            That's great!`
+          ]
+        } else if (this.score > 0) {
+          message = [
+            `Congratulations ${this.userNickname}!
+            Out of ${this.gameType} games, you won ${this.wins}.`
+          ]
+        } else if (this.score < 0) {
+          message = [
+            `Out of ${this.gameType} games, you won ${this.wins}.
+            Better luck next time!`
+          ]
+        } else if (this.score === 0) {
+          message = [
+            `You ended up with a total score of ${this.score}.
+            That means it's a tie!`
+          ]
+        }
+        this.DisplayTimedMessage(message, 3000, (e) => { this.DisplayHighscoreState(0, 0) })
+      }
+    }
+
+    UpdateScoreFromWinsLossesAndTies () {
+      this.score = this.wins + (this.losses * -1)
+    }
+
+    UpdateGamesPlayed () {
+      this.gamesPlayed = this.wins + this.losses + this.ties
     }
 
     /**
