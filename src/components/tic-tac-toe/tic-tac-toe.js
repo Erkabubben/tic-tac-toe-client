@@ -118,8 +118,8 @@ customElements.define('tic-tac-toe',
         this._pwdApp = this.shadowRoot.querySelector('#main')
         this.name = 'Tic Tac Toe'
         this._styleSize = this.shadowRoot.querySelector('style#size')
-        this.width = 800
-        this.height = 600
+        this.width = 1280
+        this.height = 720
   
         this.SetSize(this.width, this.height)
   
@@ -276,27 +276,27 @@ customElements.define('tic-tac-toe',
         let message = null
         if (this.score === this.gameType) {
           message = [
-            `Congratulations ${this.userNickname}!
-            You won all ${this.wins} games!!
+            `Congratulations ${this.userNickname}!\n
+            You won all ${this.wins} games!!\n
             That's great!`
           ]
         } else if (this.score > 0) {
           message = [
-            `Congratulations ${this.userNickname}!
+            `Congratulations ${this.userNickname}!\n
             Out of ${this.gameType} games, you won ${this.wins}.`
           ]
         } else if (this.score < 0) {
           message = [
-            `Out of ${this.gameType} games, you won ${this.wins}.
+            `Out of ${this.gameType} games, you won ${this.wins}.\n
             Better luck next time!`
           ]
         } else if (this.score === 0) {
           message = [
-            `You ended up with a total score of ${this.score}.
+            `You ended up with a total score of ${this.score}.\n
             That means it's a tie!`
           ]
         }
-        this.DisplayTimedMessage(message, 3000, (e) => { this.DisplayHighscoreState(0, 0) })
+        this.DisplayTimedMessage(message, 3000, (e) => { this.DisplayHighscoreState() })
       }
     }
 
@@ -314,13 +314,12 @@ customElements.define('tic-tac-toe',
      * @param {number} mistakes - The number of mismatches the player made during the game.
      * @param {number} time - The time it took for the player to finish the game, in milliseconds.
      */
-    DisplayHighscoreState (mistakes, time) {
+    DisplayHighscoreState () {
       this._pwdApp.removeChild(this.currentState)
       /* Create highscore screen */
       const highscoreState = document.createElement('highscore-state')
       highscoreState.setAttribute('name', this.userNickname)
-      highscoreState.setAttribute('mistakes', mistakes)
-      highscoreState.setAttribute('time', time)
+      highscoreState.setAttribute('score', this.score)
       highscoreState.setAttribute('game', this.gameType)
       highscoreState.InheritStyle(this.shadowRoot.querySelector('style'))
       this.currentState = this._pwdApp.appendChild(highscoreState)

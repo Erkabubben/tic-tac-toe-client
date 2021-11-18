@@ -46,8 +46,7 @@ template.innerHTML = `
       <table id="highscoretable">
         <tr>
           <th>Nickname</th>
-          <th>Mistakes</th>
-          <th>Time</th>
+          <th>Score</th>
         </tr>
       </table> 
     </div>
@@ -110,7 +109,6 @@ customElements.define('highscore-state',
     static get observedAttributes () {
       return [
         'name',
-        'time',
         'mistakes',
         'game'
       ]
@@ -130,8 +128,8 @@ customElements.define('highscore-state',
      * Called after the element is inserted into the DOM.
      */
     connectedCallback () {
-      this._localStorageFileName = 'elimk06_pwd-memory-highscores-' + this.getAttribute('game')
-      if (this.hasAttribute('name') && this.hasAttribute('time') && this.hasAttribute('mistakes')) {
+      this._localStorageFileName = 'erkabubben-tic-tac-toe-highscores-' + this.getAttribute('game')
+      if (this.hasAttribute('name') && this.hasAttribute('score')) {
         this.UpdateHighscoreData()
       }
       this.DisplayHighscores()
@@ -154,17 +152,17 @@ customElements.define('highscore-state',
       /* Create new highscore data if none is present in local storage */
       if (localStorage.getItem(this._localStorageFileName) === null) {
         const newHighscores = []
-        newHighscores.push([this.getAttribute('name'), this.getAttribute('mistakes'), this.getAttribute('time')])
+        newHighscores.push([this.getAttribute('name'), this.getAttribute('score')])
         this._message.textContent = 'You made #' + (newHighscores.length) + '!'
         localStorage.setItem(this._localStorageFileName, JSON.stringify(newHighscores))
       /* Otherwise, retrieve and update existing data */
       } else {
         const storedHighscores = JSON.parse(localStorage.getItem(this._localStorageFileName))
-        const userEntry = [this.getAttribute('name'), this.getAttribute('mistakes'), this.getAttribute('time')]
+        const userEntry = [this.getAttribute('name'), this.getAttribute('score')]
         let newEntryAdded = false
         for (let index = 0; index < storedHighscores.length; index++) {
           const element = storedHighscores[index]
-          if ((this.getAttribute('mistakes') < element[1]) || (this.getAttribute('mistakes') === element[1] && this.getAttribute('time') < element[2])) {
+          if (Number(this.getAttribute('score')) > Number(element[1])) {
             storedHighscores.splice(index, 0, userEntry)
             this._message.textContent = 'You made #' + (index + 1) + '!'
             newEntryAdded = true
@@ -203,23 +201,19 @@ customElements.define('highscore-state',
      * Updates the highscore table to display the contents of the stored highscores data.
      */
     DisplayHighscores () {
-      this._mainheader.textContent = this.getAttribute('game').toUpperCase() + ' HIGHSCORES'
+      this._mainheader.textContent = 'HIGHSCORES (' + this.getAttribute('game').toUpperCase() + ' GAME ROUNDS)'
       if (localStorage.getItem(this._localStorageFileName) !== null) {
         const currentHighscores = JSON.parse(localStorage.getItem(this._localStorageFileName))
         for (let index = 0; index < currentHighscores.length; index++) {
           const name = currentHighscores[index][0]
-          const mistakes = currentHighscores[index][1]
-          const time = currentHighscores[index][2]
+          const score = currentHighscores[index][1]
           const tableRow = document.createElement('tr')
           const tableDataName = document.createElement('td')
           tableDataName.textContent = name
-          const tableDataMistakes = document.createElement('td')
-          tableDataMistakes.textContent = mistakes
-          const tableDataTime = document.createElement('td')
-          tableDataTime.textContent = (time / 1000) + ' seconds'
+          const tableDataScore = document.createElement('td')
+          tableDataScore.textContent = score
           tableRow.appendChild(tableDataName)
-          tableRow.appendChild(tableDataMistakes)
-          tableRow.appendChild(tableDataTime)
+          tableRow.appendChild(tableDataScore)
           this._highscoreTable.appendChild(tableRow)
         }
       } else {

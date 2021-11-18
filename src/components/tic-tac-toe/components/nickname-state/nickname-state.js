@@ -108,7 +108,7 @@ customElements.define('nickname-state',
       this._alternatives = this.shadowRoot.querySelector('#alternatives')
 
       /* Sets up the game difficulties to choose from */
-      const gameTypes = ['1', '3', '5', '10', '25']
+      const gameTypes = ['1', '2', '3', '5', '10', '25']
 
       /* Creates a button for each element in the gameTypes array */
       gameTypes.forEach(element => {
