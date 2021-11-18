@@ -26,7 +26,7 @@ template.innerHTML = `
       transform: translate(-50%, -50%);
       max-width: 80%;
       background-image: url("${imagesOfParentPath}square-paper-bg-0.jpg");
-      border: 3px outset #999999;
+      border: 0px outset #999999;
       padding: 24px;
     }
   </style>

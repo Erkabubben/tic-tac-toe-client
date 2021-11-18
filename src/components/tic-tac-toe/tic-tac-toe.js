@@ -42,9 +42,10 @@ template.innerHTML = `
       text-align: left;
     }
     button {
-      background-color: rgba(0, 0, 0, 0);
-      border: 6px outset #333333;
-      font-family: Verdana;
+      background-image: url("${imagesPath}square-paper-bg-0.jpg");
+      border: 3px outset #999999;
+      font-family: "Lucida Handwriting", cursive;
+      color: black;
       font-size: 1.25em;
       padding: 0.25em;
       margin: 12px;

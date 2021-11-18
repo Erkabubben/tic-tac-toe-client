@@ -121,6 +121,28 @@ template.innerHTML = `
       animation-timing-function: ease-out;
     }
 
+    /*@keyframes form-appear {
+      0% {
+        opacity: 0.5;
+        top: 1200px;
+        transform: rotate(0deg)
+      }
+      50% {
+        transform: rotate(0deg)
+      }
+      100% {
+        opacity: 1.0;
+        top: 20%;
+        left: 50%;
+      }
+    }*/
+
+    form {
+      animation-name: form-appear;
+      animation-duration: 1s;
+      animation-timing-function: ease-out;
+    }
+
     form {
       position: absolute;
       left: 50%;
@@ -129,14 +151,18 @@ template.innerHTML = `
       font-family: Verdana;
       color: white;
       width: 50%;
+      background-image: url("${imagesOfParentPath}square-paper-bg-0.jpg");
     }
 
     form input#nickname {
       position: absolute;
       transform: translate(-50% ,0 );
+      background-color: transparent;
+      border: 2px solid black;
       font-family: "Lucida Handwriting", cursive;
       left: 50%;
       font-size: 1.25rem;
+      padding: 8px;
     }
 
     form p {
@@ -151,11 +177,10 @@ template.innerHTML = `
       display: block;
       margin-left: auto;
       margin-right: auto;
-      font-family: Verdana;
-      color: white;
       font-weight: bold;
       background-color: #444444;
       border: 2px outset #444444;
+      width: 3rem;
     }
 
     form button:hover {
@@ -164,15 +189,22 @@ template.innerHTML = `
     }
 
     :focus {
-      box-shadow: 0px 0px 1px 6px red;
+      box-shadow: 0px 0px 1px 3px red;
       outline: none;
     }
 
     ::part(selected) {
-      box-shadow: 0px 0px 1px 6px red;
+      box-shadow: 0px 0px 1px 3px red;
     }
   </style>
   <div id="nickname-state">
+    <form id="start-form">
+      <p>Enter a nickname: </p>
+      <input type="text" id="nickname" class="selectable" autocomplete="off">
+      <br><br>
+      <p>Game Rounds: </p>
+      <div id="alternatives"></div><br>
+    </form>
     <br>
     <img id="pencils" src="` + imagesOfParentPath + `tic-tac-toe-pencils.png">
     <div id="game-title-headers">
@@ -181,13 +213,6 @@ template.innerHTML = `
       <h1 id="toe">Toe</h1>
     </div>
     <br>
-    <form>
-      <p>Enter a nickname: </p>
-      <input type="text" id="nickname" class="selectable" autocomplete="off">
-      <br><br>
-      <p>Game Rounds: </p>
-      <div id="alternatives"></div><br>
-    </form>
   </div>
 `
 
@@ -240,6 +265,15 @@ customElements.define('nickname-state',
       /* Properties for determining which element is currently selected */
       this._selectedElement = 0
       this._selectables = this._nicknameState.querySelectorAll('.selectable')
+
+      for (let index = 0; index < this._selectables.length; index++) {
+        const element = this._selectables[index];
+        element.addEventListener('onmousedown', (event) => {
+          this._selectables[this._selectedElement].blur()
+          this._selectedElement = index
+          this._selectables[this._selectedElement].focus()
+        })
+      }
 
       /* Event Listener that will set focus to the previously selected element when
          clicking inside the state */

@@ -29,18 +29,36 @@ template.innerHTML = `
       left: 0px;
       top: 0px;
     }
+    @keyframes cards-area-appear {
+      0% {
+        opacity: 0.5;
+        top: -50%;
+        left: -10%;
+        transform: rotate(-25deg)
+      }
+      100% {
+        opacity: 1.0;
+        top: 50%;
+        left: 50%;
+        transform: rotate(deg)
+      }
+    }
     #cards-area {
       width: max-content;
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      background-image: url("${imagesOfParentPath}square-paper-bg-0.jpg");
+      animation-name: cards-area-appear;
+      animation-duration: 0.5s;
+      animation-timing-function: ease-out;
     }
     #h-line-0, #h-line-1 {
       position: absolute;
       top: 0px;
       background-color: grey;
-      width: 4px;
+      width: 2px;
       height: 100%;
     }
     #h-line-0 {
@@ -54,13 +72,27 @@ template.innerHTML = `
       left: 0px;
       background-color: grey;
       width: 100%;
-      height: 4px;
+      height: 2px;
     }
     #v-line-0 {
       top: 33%;
     }
     #v-line-1 {
       bottom: 33%;
+    }
+    @keyframes ui-area-appear {
+      0% {
+        opacity: 0.5;
+        top: -500px;
+        right: -20%;
+        transform: rotate(-25deg)
+      }
+      100% {
+        opacity: 1.0;
+        top: 0%;
+        right: 0px;
+        transform: rotate(0deg)
+      }
     }
     #ui-area {
       position: absolute;
@@ -69,7 +101,9 @@ template.innerHTML = `
       height: 100%;
       right: 0px;
       top: 0px;
-      border-left: 4px outset #888888;
+      animation-name: ui-area-appear;
+      animation-duration: 0.5s;
+      animation-timing-function: ease-out;
     }
     #ui-area h1 {
       color: black;

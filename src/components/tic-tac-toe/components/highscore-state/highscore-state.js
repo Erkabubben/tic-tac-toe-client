@@ -25,10 +25,18 @@ template.innerHTML = `
     h1, h2, #highscoretable {
       display: block;
       margin: auto;
-      color: orange;
+      font-family: "Lucida Handwriting", cursive;
+      color: black;
     }
     th, td {
       padding: 0.2em;
+      font-family: "Lucida Handwriting", cursive;
+    }
+    th {
+      text-align: left;
+    }
+    .nickname-column {
+      width: 300px;
     }
     #hs {
       position: absolute;
@@ -36,7 +44,7 @@ template.innerHTML = `
       left: 50%;
       transform: translate(-50%, -50%);
       background-image: url("${imagesOfParentPath}square-paper-bg-0.jpg");
-      border: 3px outset #999999;
+      border: 0px outset #999999;
       width: max-content;
       padding: 24px;
     }
@@ -47,7 +55,7 @@ template.innerHTML = `
       <h2></h2>
       <table id="highscoretable">
         <tr>
-          <th>Nickname</th>
+          <th class="nickname-column">Nickname</th>
           <th>Score</th>
         </tr>
       </table> 
@@ -226,6 +234,7 @@ customElements.define('highscore-state',
           const tableRow = document.createElement('tr')
           const tableDataName = document.createElement('td')
           tableDataName.textContent = name
+          tableDataName.classList.add('nickname-column')
           const tableDataScore = document.createElement('td')
           tableDataScore.textContent = score
           tableRow.appendChild(tableDataName)
