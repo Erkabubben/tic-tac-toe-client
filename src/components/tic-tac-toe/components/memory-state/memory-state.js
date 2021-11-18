@@ -59,12 +59,12 @@ template.innerHTML = `
       <div id="cards-area"></div>
     </div>
     <div id="ui-area">
-      <h1 id="pairsfoundtext">Pairs found:</h1>
-      <h1 id="pairsfoundcounter"></h1>
-      <h1 id="mistakestext">Mistakes:</h1>
-      <h1 id="mistakescounter"></h1>
-      <h1 id="timertext">Time:</h1>
-      <h1 id="timercounter"><countdown-timer id="countdown-timer"></h1>
+      <h1 id="winstext">Wins:</h1>
+      <h1 id="winscounter"></h1>
+      <h1 id="lossestext">Losses:</h1>
+      <h1 id="lossescounter"></h1>
+      <h1 id="tiestext">Ties:</h1>
+      <h1 id="tiescounter"></h1>
     </div>
   </div>
 `
@@ -92,10 +92,9 @@ customElements.define('memory-state',
       this._memoryState = this.shadowRoot.querySelector('#memory-state')
       this._gameArea = this.shadowRoot.querySelector('#game-area')
       this._cardsArea = this.shadowRoot.querySelector('#cards-area')
-      this._pairsFoundCounter = this.shadowRoot.querySelector('#pairsfoundcounter')
-      this._mistakesCounter = this.shadowRoot.querySelector('#mistakescounter')
-      this._timerCounter = this.shadowRoot.querySelector('#timercounter')
-      this._countdownTimer = this.shadowRoot.querySelector('#countdown-timer')
+      this._winsCounter = this.shadowRoot.querySelector('#winscounter')
+      this._lossesCounter = this.shadowRoot.querySelector('#lossescounter')
+      this._tiesCounter = this.shadowRoot.querySelector('#tiescounter')
 
       this.cardSize = 96 // Default card size
 
@@ -106,15 +105,7 @@ customElements.define('memory-state',
       this._currentGameID = ''
       this._disableAllInput = false
 
-      /* Reference for setting the size of the cards depending on game type */
-      this.cardSizes = {
-        '2x2': 256,
-        '4x2': 128,
-        '4x4': 128,
-        '6x6': 90
-      }
-
-      /* The total amount of cards, rows and columns at the start of the game  - set from
+      /* The total amount of tiles, rows and columns at the start of the game  - set from
          the gameType parameter by InitiateGame() */
       this._startingTilesAmount = 0
       this._lineLength = 0
@@ -137,10 +128,6 @@ customElements.define('memory-state',
       this._cardsOfPair1 = -1
       this._cardsOfPair2 = -1
       this._cardsPairTimeout = 0
-
-      /* Game progress properties */
-      this._pairsFound = 0
-      this._mistakes = 0
 
       /* Event Listener that will set focus to the previously selected element when
          clicking inside the state */
@@ -165,15 +152,15 @@ customElements.define('memory-state',
     /**
      * Called by pwd-memory to set up a new game after the element has been created.
      *
-     * @param {string} gameType - The game type selected in the nickname state.
+     * @param {string} gameData - The game type selected in the nickname state.
      */
-    InitiateGame (gameType, responseJSON) {
+    InitiateGame (gameData, responseJSON) {
       this._currentGameID = responseJSON.id
-      console.log(responseJSON)
       console.log('New game ID set to: ' + this._currentGameID)
 
-      this._pairsFoundCounter.textContent = '0'
-      this._mistakesCounter.textContent = '0'
+      this._winsCounter.textContent = gameData.wins
+      this._lossesCounter.textContent = gameData.losses
+      this._tiesCounter.textContent = gameData.ties
 
       this._lineLength = 3
       this._linesAmount = 3
@@ -189,7 +176,6 @@ customElements.define('memory-state',
           newTile.setAttribute('backsideImage', 'backside.jpg')
           newTile.SetSize(160, 160)
           newTile.setAttribute('tabindex', '-1')
-          //newCardImg.setAttribute('src', imagesPath + newCard.motif + '.jpg')
           newTile.setState('')
           newTile.row = i
           newTile.column = j
@@ -320,24 +306,34 @@ customElements.define('memory-state',
           await this.AwaitAnimationEnd(opponentResponseTile.currentSymbolImg)
         }
         if (responseJSON.gameOver) {
-          console.log('game has ended!')
-          if (responseJSON.winner != null) {
-            const winnerTiles = this.GetWinnerTiles(responseJSON)
-            console.log(winnerTiles)
-            if (winnerTiles != null) {
-              winnerTiles.forEach(tileID => {
-                this._activeTiles[tileID].startWinnerAnimation()
-              })
-            }
-          }
-          /*this.dispatchEvent(
-            new window.CustomEvent('gameOver',
-            { detail: { time: this._countdownTimer.counterCurrentTime, mistakes: this._mistakes } }))*/
+          this.OnGameOver(responseJSON)
         }
       // Error handling
       /*} catch (error) {
         console.log('Error on fetch request!')
       }*/
+    }
+
+    async OnGameOver (json) {
+      this._disableAllInput = true
+      console.log('game has ended!')
+      if (json.winner != null) {
+        const winnerTiles = this.GetWinnerTiles(json)
+        console.log(winnerTiles)
+        if (winnerTiles != null) {
+          winnerTiles.forEach(tileID => {
+            this._activeTiles[tileID].startWinnerAnimation()
+          })
+          console.log(this._activeTiles)
+          console.log(winnerTiles[0])
+          console.log(this._activeTiles[winnerTiles[0]])
+          await this.AwaitAnimationEnd(this._activeTiles[winnerTiles[0]].currentSymbolImg)
+          console.log('ANIM FINISH')
+          //this.dispatchEvent(new window.CustomEvent('gameOver', { detail: json.winner }))
+        }
+      }
+      this._disableAllInput = false
+      this.dispatchEvent(new window.CustomEvent('gameOver', { detail: json.winner }))
     }
 
     GetWinnerTiles (json) {
@@ -381,11 +377,11 @@ customElements.define('memory-state',
      * Retrieves a new question from the server and parses it to a JSON object, which is then
      * used by DisplayNewQuestion() to create a new question screen.
      */
-    async StartGameAPIGet (gameType) {
+    async StartGameAPIGet (gameData) {
       try {
         const response = await window.fetch(this._startGameUri)
         const responseJSON = await response.json() // Parse response to JSON object
-        this.InitiateGame(gameType, responseJSON)
+        this.InitiateGame(gameData, responseJSON)
       // Error handling
       } catch (error) {
         console.log('Error on fetch request!')

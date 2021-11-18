@@ -108,7 +108,7 @@ customElements.define('nickname-state',
       this._alternatives = this.shadowRoot.querySelector('#alternatives')
 
       /* Sets up the game difficulties to choose from */
-      const gameTypes = ['2x2', '4x2', '4x4', '6x6']
+      const gameTypes = ['1', '5', '10', '25']
 
       /* Creates a button for each element in the gameTypes array */
       gameTypes.forEach(element => {
@@ -119,9 +119,11 @@ customElements.define('nickname-state',
         this._alternatives.appendChild(newAlternative)
         newAlternative.addEventListener('click', (event) => { // Checks if the mouse has been clicked
           event.preventDefault()
-          if (this._input.value.length > 2) this.dispatchEvent(new window.CustomEvent('nicknameSet', { detail: { nickname: this._input.value, game: newAlternative.value } }))
+          if (this._input.value.length > 2) {
+            this.dispatchEvent(new window.CustomEvent('nicknameSet', { detail: { nickname: this._input.value, game: newAlternative.value } }))
+          }
         })
-        this._alternatives.appendChild(document.createElement('br'))
+        //this._alternatives.appendChild(document.createElement('br'))
       })
 
       /* Properties for determining which element is currently selected */
@@ -166,7 +168,9 @@ customElements.define('nickname-state',
         } else if (event.keyCode === 13 && this._selectedElement !== 0) { // Enter, when game button is selected...
           event.preventDefault()
           if (this._input.value.length > 2) { // ...and a valid nickname is set.
-            this.dispatchEvent(new window.CustomEvent('nicknameSet', { detail: { nickname: this._input.value, game: this._selectables[this._selectedElement].value } }))
+            this.dispatchEvent(new window.CustomEvent(
+              'nicknameSet',
+              { detail: { nickname: this._input.value, game: this._selectables[this._selectedElement].value } }))
           }
         }
         // Focus or blur text input field depending on wether it is selected

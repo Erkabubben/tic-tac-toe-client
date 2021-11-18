@@ -128,6 +128,10 @@ customElements.define('tic-tac-toe',
         this.userNickname = ''
         this.totalTime = 0
         this.gameType = ''
+        this.wins = 0
+        this.losses = 0
+        this.ties = 0
+        this.score = 0
 
         const availableSoundEffects = [
           { name: 'confirm-beep-0', file: 'Light Drone Sound (button hover) 3.wav' },
@@ -209,11 +213,15 @@ customElements.define('tic-tac-toe',
         this.userNickname = e.detail.nickname
         this.totalTime = 0
         this.gameType = e.detail.game
+        this.wins = 0
+        this.losses = 0
+        this.ties = 0
+        this.score = 0
         const selectedSoundEffect = this.getRndInteger(0, 4)
         this.dispatchEvent(new window.CustomEvent(
-          'playMusic', { detail: { name: 'main-theme' } }))
-        this.dispatchEvent(new window.CustomEvent(
           'playSFX', { detail: { name: 'confirm-beep-' + selectedSoundEffect } }))
+        //this.dispatchEvent(new window.CustomEvent(
+        //  'playMusic', { detail: { name: 'main-theme' } }))
         this.DisplayMemoryGameState()
       })
     }
@@ -229,17 +237,26 @@ customElements.define('tic-tac-toe',
       const memoryState = document.createElement('memory-state')
       memoryState.InheritStyle(this.shadowRoot.querySelector('style'))
       this.currentState = this._pwdApp.appendChild(memoryState)
-      this.currentState.StartGameAPIGet(this.gameType)
+      this.currentState.StartGameAPIGet(
+        { gameType: this.gameType, wins: this.wins, losses: this.losses, ties: this.ties } )
       this.currentState.addEventListener('playSFX', (event) => {
         this.PlaySound('sfx', event)
       })
       this.currentState.addEventListener('gameOver', (event) => {
-        const message = [
+        if (event.detail === 'PLAYER') {
+          this.wins++
+        } else if (event.detail === 'AI') {
+          this.losses++
+        } else {
+          this.ties++
+        }
+        this.DisplayMemoryGameState()
+        /*const message = [
           'Congratulations ' + this.userNickname + '!',
           'You finished the ' + this.gameType + ' difficulty ' + 'with ' + event.detail.mistakes + ' mistakes,',
           'at ' + (event.detail.time * 0.001) + ' seconds.'
         ]
-        this.DisplayTimedMessage(message, 3000, (e) => { this.DisplayHighscoreState(event.detail.mistakes, event.detail.time) })
+        this.DisplayTimedMessage(message, 3000, (e) => { this.DisplayHighscoreState(event.detail.mistakes, event.detail.time) })*/
       })
     }
 
