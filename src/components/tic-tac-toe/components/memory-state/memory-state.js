@@ -104,6 +104,7 @@ customElements.define('memory-state',
       this._startGameUri = 'http://localhost:8080/games/start'
       this._playerMovePostBaseUri = 'http://localhost:8080/games/'
       this._currentGameID = ''
+      this._disableAllInput = false
 
       /* Reference for setting the size of the cards depending on game type */
       this.cardSizes = {
@@ -194,21 +195,7 @@ customElements.define('memory-state',
           newTile.column = j
           newTile.cardID = k
           newTile.addEventListener('click', event => {
-            this.OnClickTile(newTile, event)
-            /*if (event.button === 0) {
-              this._selectedTileColumn = newTile.column
-              this._selectedTileRow = newTile.row
-              this._selectedTile = newTile.cardID
-              this.UpdateTileSelection()
-              const tile = this._activeTiles[this._selectedTile]
-              if (tile.getAttribute('state') != this.playerSymbol
-                && tile.getAttribute('state') != this.opponentSymbol) {
-                  this.PlayConfirmSoundEffect()
-                  tile.setState(this.playerSymbol)
-                  this.AwaitAnimationEnd(tile.currentSymbolImg)
-                  this.PlayerMoveAPIPost(this._selectedTile)
-              }
-            }*/
+              this.OnClickTile(newTile, event)
           })
           newCardLine.appendChild(newTile)
           this._activeTiles.push(newTile)
@@ -227,6 +214,10 @@ customElements.define('memory-state',
        * @param {event} event - The 'keydown' event.
        */
       this.keyDownFunction = (event) => {
+        if (this._disableAllInput) {
+          return
+        }
+
         if (event.keyCode === 39 || event.keyCode === 68) { // Right arrowkey
           event.preventDefault()
           this._selectedTileColumn = (this._selectedTileColumn + 1) % this._lineLength
@@ -250,14 +241,7 @@ customElements.define('memory-state',
         this._selectedTile = this._cardsColumnRowToID[this._selectedTileColumn + ',' + this._selectedTileRow]
         this.UpdateTileSelection()
         if (event.keyCode === 13) {
-          event.preventDefault()
-          this.UpdateTileSelection()
-          const tile = this._activeTiles[this._selectedTile]
-          if (tile.getAttribute('state') != this.playerSymbol
-            && tile.getAttribute('state') != this.opponentSymbol) {
-              tile.setState(this.playerSymbol)
-              this.PlayerMoveAPIPost(this._selectedTile)
-          }
+          this.OnEnterTile(event)
         }
         this.removeEventListener('keydown', this.keyDownFunction)
       }
@@ -276,20 +260,33 @@ customElements.define('memory-state',
       this.addEventListener('keyup', this.keyUpFunction)
     }
 
-    async OnClickTile(clickedTile, event) {
-      if (event.button === 0) {
+    async OnClickTile (clickedTile, event) {
+      if (!this._disableAllInput && event.button === 0) { 
         this._selectedTileColumn = clickedTile.column
         this._selectedTileRow = clickedTile.row
         this._selectedTile = clickedTile.cardID
         this.UpdateTileSelection()
         const tile = this._activeTiles[this._selectedTile]
-        if (tile.getAttribute('state') != this.playerSymbol
-          && tile.getAttribute('state') != this.opponentSymbol) {
-            this.PlayConfirmSoundEffect()
-            tile.setState(this.playerSymbol)
-            await this.AwaitAnimationEnd(tile.currentSymbolImg)
-            this.PlayerMoveAPIPost(this._selectedTile)
-        }
+        await this.SetSelectedTileToPlayerSymbol(tile)
+      }
+    }
+
+    async OnEnterTile (event) {
+      event.preventDefault()
+      this.UpdateTileSelection()
+      const tile = this._activeTiles[this._selectedTile]
+      await this.SetSelectedTileToPlayerSymbol(tile)
+    }
+
+    async SetSelectedTileToPlayerSymbol (tile) {
+      if (tile.getAttribute('state') != this.playerSymbol
+        && tile.getAttribute('state') != this.opponentSymbol) {
+          this._disableAllInput = true
+          this.PlayConfirmSoundEffect()
+          tile.setState(this.playerSymbol)
+          await this.AwaitAnimationEnd(tile.currentSymbolImg)
+          this.PlayerMoveAPIPost(this._selectedTile)
+          this._disableAllInput = false
       }
     }
 
@@ -306,7 +303,7 @@ customElements.define('memory-state',
      * @param {string} move - The URL of the question to be retrieved.
      */
     async PlayerMoveAPIPost (move) {
-      try {
+      //try {
         const moveJSONstringified = await JSON.stringify({ "position": move })
         const response = await window.fetch(this._playerMovePostBaseUri + this._currentGameID, {
           method: 'POST',
@@ -316,19 +313,60 @@ customElements.define('memory-state',
         const responseJSON = await response.json() // Parse response to JSON object
         console.log(responseJSON)
         console.log(responseJSON.moves)
-        const opponentResponseTileID = responseJSON.moves[responseJSON.moves.length - 1].position
-        const opponentResponseTile = this._activeTiles[opponentResponseTileID]
-        opponentResponseTile.setState(this.opponentSymbol)
+        const lastMove = this.GetLastMove(responseJSON)
+        if (lastMove.player == 'AI') {
+          const opponentResponseTile = this._activeTiles[lastMove.position]
+          opponentResponseTile.setState(this.opponentSymbol)
+          await this.AwaitAnimationEnd(opponentResponseTile.currentSymbolImg)
+        }
         if (responseJSON.gameOver) {
           console.log('game has ended!')
-          this.dispatchEvent(
+          if (responseJSON.winner != null) {
+            const winnerTiles = this.GetWinnerTiles(responseJSON)
+            console.log(winnerTiles)
+            if (winnerTiles != null) {
+              winnerTiles.forEach(tileID => {
+                this._activeTiles[tileID].startWinnerAnimation()
+              })
+            }
+          }
+          /*this.dispatchEvent(
             new window.CustomEvent('gameOver',
-            { detail: { time: this._countdownTimer.counterCurrentTime, mistakes: this._mistakes } }))
+            { detail: { time: this._countdownTimer.counterCurrentTime, mistakes: this._mistakes } }))*/
         }
       // Error handling
-      } catch (error) {
+      /*} catch (error) {
         console.log('Error on fetch request!')
+      }*/
+    }
+
+    GetWinnerTiles (json) {
+      const board = json.board
+      const possibleWins = [
+        [ 0, 1, 2 ],
+        [ 3, 4, 5 ],
+        [ 6, 7, 8 ],
+        [ 0, 3, 6 ],
+        [ 1, 4, 7 ],
+        [ 2, 5, 8 ],
+        [ 0, 4, 8 ],
+        [ 2, 4, 6 ],
+      ]
+
+      for (let i = 0; i < possibleWins.length; i++) {
+        const tilesArray = possibleWins[i];
+        if (board[tilesArray[0].toString()] !== null
+          && board[tilesArray[1].toString()] === board[tilesArray[0].toString()]
+          && board[tilesArray[2].toString()] === board[tilesArray[0].toString()]) {
+          return tilesArray
+        }
       }
+
+      return null
+    }
+
+    GetLastMove (json) {
+      return json.moves[json.moves.length - 1]
     }
 
     async AwaitAnimationEnd (element) {

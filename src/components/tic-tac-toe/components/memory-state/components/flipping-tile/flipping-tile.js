@@ -83,6 +83,24 @@ template.innerHTML = `
       animation-name: appear;
       animation-duration: 1s;
     }
+    /* The animation code */
+    @keyframes winner {
+      from {
+        height: 100%;
+        width: 100%;
+      }
+      to {
+        height: 70%;
+        width: 70%;
+      }
+    }
+    /* The element to apply the animation to */
+    .winner-symbol {
+      animation-name: winner;
+      animation-iteration-count: 10;
+      animation-duration: 0.25s;
+      animation-direction: alternate;
+    }
   </style>
   <style id="backsideStyle">
     div.backsideUp {
@@ -179,6 +197,11 @@ customElements.define('flipping-tile',
      */
     attributeChangedCallback (name, oldValue, newValue) {
       this.updateImageSrcAttribute()
+    }
+
+    startWinnerAnimation () {
+      this.currentSymbolImg.classList.remove('appearing-symbol')
+      this.currentSymbolImg.classList.add('winner-symbol')
     }
 
     /**
