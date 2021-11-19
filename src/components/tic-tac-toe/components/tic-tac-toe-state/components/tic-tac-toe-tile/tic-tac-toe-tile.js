@@ -1,8 +1,8 @@
 /**
- * The flipped-tile web component module.
+ * The tic-tac-toe-tile web component module.
  *
- * @author Erik Lindholm <elimk06@student.lnu.se>
- * @version 2.0.0
+ * @author Erik Lindholm <eriklindholm87@hotmail.com>
+ * @version 1.0.0
  */
 const pathToModule = import.meta.url
 const imagesPath = new URL('./images/', pathToModule)
@@ -55,10 +55,10 @@ template.innerHTML = `
     img.hidden {
       display: none;
     }
-    flipping-tile::part(show) {
+    tic-tac-toe-tile::part(show) {
       display: block;
     }
-    flipping-tile::part(hide) {
+    tic-tac-toe-tile::part(hide) {
       display: none;
     }
     :focus {
@@ -122,7 +122,7 @@ template.innerHTML = `
 /**
  * Define custom element.
  */
-customElements.define('flipping-tile',
+customElements.define('tic-tac-toe-tile',
   /**
    *
    */
@@ -143,7 +143,7 @@ customElements.define('flipping-tile',
       this._oImg = this._div.querySelector('img#o')
       this.currentSymbolImg = null
 
-      this.imgVariant = this.getRndInteger(0, 3)
+      this.imgVariant = this.GetRandomInteger(0, 3)
       this._xImg.setAttribute('src', imagesPath + 'x' + this.imgVariant + '.png')
       this._oImg.setAttribute('src', imagesPath + 'o' + this.imgVariant + '.png')
 
@@ -153,8 +153,7 @@ customElements.define('flipping-tile',
 
       this.column = 0
       this.row = 0
-      this.cardID = 0
-      this.motif = 0
+      this.tileID = 0
 
       this.updateImageSrcAttribute()
     }
@@ -208,8 +207,15 @@ customElements.define('flipping-tile',
       this.currentSymbolImg.classList.add('winner-symbol')
     }
 
-    getRndInteger(min, max) {
-      return Math.floor(Math.random() * (max - min) ) + min;
+    /**
+     * Utility function for getting a random integer within a specified range.
+     *
+     * @param {number} min - The minimum number returned (inclusive).
+     * @param {number} max - The maximum number returned (exclusive).
+     * @returns {number} - A random number between the min and max values.
+     */
+     GetRandomInteger (min, max) {
+      return Math.floor(Math.random() * (max - min)) + min
     }
 
     /**
@@ -235,9 +241,7 @@ customElements.define('flipping-tile',
     /**
      * Called after the element is inserted into the DOM.
      */
-    connectedCallback () {
-
-    }
+    connectedCallback () {}
 
     /**
      * Flips the tile and dispatches a 'tileflip' event with the tile's innerHTML value.

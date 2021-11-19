@@ -1,7 +1,7 @@
 /**
  * The message-state web component module.
  *
- * @author Erik Lindholm <elimk06@student.lnu.se>
+ * @author Erik Lindholm <eriklindholm87@hotmail.com>
  * @version 1.0.0
  */
 const pathToModule = import.meta.url
@@ -129,6 +129,7 @@ customElements.define('message-state',
     async CountdownHasReachedZero () {
       this._messageContainer.classList.remove('note-appear')
       this._messageContainer.classList.add('note-disappear')
+      // Await exit animation before dispatching exit event
       await this.AwaitAnimationEnd(this._messageContainer)
       this.dispatchEvent(new window.CustomEvent('messagetimerzero'))
     }

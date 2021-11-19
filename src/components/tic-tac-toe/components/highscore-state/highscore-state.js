@@ -1,7 +1,7 @@
 /**
  * The highscore-state web component module.
  *
- * @author Erik Lindholm <elimk06@student.lnu.se>
+ * @author Erik Lindholm <eriklindholm87@hotmail.com>
  * @version 1.0.0
  */
 const pathToModule = import.meta.url

@@ -1,12 +1,12 @@
 /**
  * The tic-tac-toe web component module.
  *
- * @author Erik Lindholm <elimk06@student.lnu.se>
+ * @author Erik Lindholm <eriklindholm87@hotmail.com>
  * @version 1.0.0
  */
 
 import './components/nickname-state/index.js'
-import './components/memory-state/index.js'
+import './components/tic-tac-toe-state/index.js'
 import './components/message-state/index.js'
 import './components/highscore-state/index.js'
 
@@ -66,7 +66,7 @@ template.innerHTML = `
     #main {
       position: absolute;
     }
-    #nickname-state, #memory-state, #message-state, #highscore-state {
+    #nickname-state, #tic-tac-toe-state, #message-state, #highscore-state {
       position: absolute;
       font-family: Verdana;
       padding: 0px;
@@ -152,66 +152,81 @@ customElements.define('tic-tac-toe',
       this.attachShadow({ mode: 'open' })
         .appendChild(template.content.cloneNode(true))
 
-        this._pwdApp = this.shadowRoot.querySelector('#main')
-        this.name = 'Tic Tac Toe'
-        this._styleSize = this.shadowRoot.querySelector('style#size')
-        this.width = 1280
-        this.height = 720
-  
-        this.SetSize(this.width, this.height)
-  
-        /* Set up app-specific properties */
-        this.currentState = null
-        this.userNickname = ''
-        this.totalTime = 0
-        this.gameType = ''
-        this.wins = 0
-        this.losses = 0
-        this.ties = 0
-        this.score = 0
-        this.gamesPlayed = 0
+      this._mainApp = this.shadowRoot.querySelector('#main')
+      this.name = 'Tic Tac Toe'
+      this._styleSize = this.shadowRoot.querySelector('style#size')
+      this.width = 1280
+      this.height = 720
 
-        const availableSoundEffects = [
-          { name: 'confirm-beep-0', file: 'Light Drone Sound (button hover) 3.wav' },
-          { name: 'confirm-beep-1', file: 'Light Drone Sound (button hover) 7.wav' },
-          { name: 'confirm-beep-2', file: 'Light Drone Sound (button hover) 9.wav' },
-          { name: 'confirm-beep-3', file: 'Light Drone Sound (button hover) 11.wav' },
-          { name: 'win-0', file: 'Win sound 2.wav' },
-          { name: 'win-1', file: 'Win sound 3.wav' },
-          { name: 'win-2', file: 'Win sound 5.wav' },
-          { name: 'win-3', file: 'Win sound 6.wav' },
-          { name: 'lose-0', file: 'Debuff Downgrade 13.wav' },
-          { name: 'lose-1', file: 'Debuff Downgrade 14.wav' },
-          { name: 'lose-2', file: 'Debuff Downgrade 15.wav' },
-          { name: 'lose-3', file: 'Debuff Downgrade 16.wav' },
-          { name: 'tie', file: 'Error Sound 13.wav' },
-          { name: 'all-win', file: 'Win sound 16.wav' },
-          { name: 'all-lose', file: 'Lost sound 21.wav', volume: 0.15 },
-        ]
+      this.SetSize(this.width, this.height)
 
-        const availableMusicTracks = [
-          { name: 'main-theme', file: 'Undergrowth (Loopable).mp3', volume: 0.5 },
-        ]
+      /* Tic Tac Toe component properties */
+      this.currentState = null
+      this.userNickname = ''
+      this.totalTime = 0
+      this.gameType = ''
+      this.wins = 0
+      this.losses = 0
+      this.ties = 0
+      this.score = 0
+      this.gameRoundsPlayed = 0
 
-        /* Set up audio */
-        this.AudioSetup(availableSoundEffects, availableMusicTracks)
+      // List of all sound effects and their paths within the 'audio/sfx' folder.
+      const availableSoundEffects = [
+        { name: 'confirm-beep-0', file: 'Light Drone Sound (button hover) 3.wav' },
+        { name: 'confirm-beep-1', file: 'Light Drone Sound (button hover) 7.wav' },
+        { name: 'confirm-beep-2', file: 'Light Drone Sound (button hover) 9.wav' },
+        { name: 'confirm-beep-3', file: 'Light Drone Sound (button hover) 11.wav' },
+        { name: 'win-0', file: 'Win sound 2.wav' },
+        { name: 'win-1', file: 'Win sound 3.wav' },
+        { name: 'win-2', file: 'Win sound 5.wav' },
+        { name: 'win-3', file: 'Win sound 6.wav' },
+        { name: 'lose-0', file: 'Debuff Downgrade 13.wav' },
+        { name: 'lose-1', file: 'Debuff Downgrade 14.wav' },
+        { name: 'lose-2', file: 'Debuff Downgrade 15.wav' },
+        { name: 'lose-3', file: 'Debuff Downgrade 16.wav' },
+        { name: 'tie', file: 'Error Sound 13.wav' },
+        { name: 'all-win', file: 'Win sound 16.wav' },
+        { name: 'all-lose', file: 'Lost sound 21.wav', volume: 0.15 }
+      ]
 
-        /* Initiates the nickname state */
-        this.DisplayNicknameState()
+      // List of all music tracks and their paths within the 'audio/music' folder.
+      const availableMusicTracks = [
+        { name: 'main-theme', file: 'Undergrowth (Loopable).mp3', volume: 0.5 }
+      ]
+
+      // Set up audio.
+      this.AudioSetup(availableSoundEffects, availableMusicTracks)
+
+      /* Initiates the nickname state */
+      this.DisplayNicknameState()
     }
 
+    /**
+     * Takes the arrays of sound effects and music tracks defined in the constructor
+     * and sets up Audio and Source Elements based on their contents. Also sets up
+     * Event listeners that allows audio to be played by dispatching the custom Events
+     * 'playSFX' and 'playMusic'.
+     *
+     * @param {Array} availableSoundEffects - Array of sound effect names and file paths.
+     * @param {Array} availableMusicTracks - Array of music track names and file paths.
+     */
     AudioSetup (availableSoundEffects, availableMusicTracks) {
-      // Sets up a custom event listener that will play sounds on messages from sub-components
-      this.addEventListener('playSFX', (event) => {
-        this.PlaySound('sfx', event)
-      })
+      // Sets up custom event listeners that will play audio on messages from sub-components.
+      this.addEventListener('playSFX', (event) => { this.PlaySound('sfx', event) })
+      this.addEventListener('playMusic', (event) => { this.PlaySound('music', event) })
 
-      this.addEventListener('playMusic', (event) => {
-        this.PlaySound('music', event)
-      })
-
-      function AddAudioElementsFromAvailableSoundsArray (containerSelector, basePath, array, type) {
-        const soundsContainerElement = containerSelector
+      /**
+       * Sets up Audio and Source elements as children of a specified container, based on the
+       * contents of an array of sound objects.
+       *
+       * @param {HTMLElement} containerElement - The container element for the new Audio elements.
+       * @param {URL} basePath - Path to the folder where the audio files are stored.
+       * @param {Array} array - Array of sound objects.
+       * @param {string} type - What to set the 'type' attribute of the Source elements to.
+       */
+      function AddAudioElementsFromAvailableSoundsArray (containerElement, basePath, array, type) {
+        const soundsContainerElement = containerElement
         array.forEach(element => {
           const newAudioElement = document.createElement('audio')
           newAudioElement.id = element.name
@@ -233,10 +248,18 @@ customElements.define('tic-tac-toe',
         this.shadowRoot.querySelector('#music-tracks'), musicPath, availableMusicTracks, 'audio/mp3')
     }
 
-    PlaySound(type, event) {
-      const selector = type == 'sfx' ? '#sound-effects audio#' : '#music-tracks audio#'
+    /**
+     * Takes the arrays of sound effects and music tracks defined in the constructor
+     * and sets up Audio and Source Elements based on their contents. Also sets up
+     * Event listeners that allows audio to be played by dispatching the custom Events
+     * 'playSFX' and 'playMusic'.
+     *
+     * @param {string} type - The type of audio to be played.
+     * @param {Array} event - The event containing the details on which sound to play.
+     */
+    PlaySound (type, event) {
+      const selector = type === 'sfx' ? '#sound-effects audio#' : '#music-tracks audio#'
       const audioElement = this.shadowRoot.querySelector(selector + event.detail.name)
-      console.log(event.detail.name)
       if (audioElement != null) {
         audioElement.fastSeek(0)
         audioElement.play()
@@ -246,58 +269,66 @@ customElements.define('tic-tac-toe',
     /**
      * Displays the start screen where the user is asked to input a nickname.
      */
-     DisplayNicknameState () {
-      /* Resets the user's total time and removes any previously displayed state or message */
-      this.totalTime = 0
+    DisplayNicknameState () {
+      /* Removes any previously displayed state or message */
       if (this.currentState !== null) {
-        this._pwdApp.removeChild(this.currentState)
+        this._mainApp.removeChild(this.currentState)
       }
       /* Creates a new nickname screen with inherited CSS style */
       const nicknameState = document.createElement('nickname-state')
       nicknameState.InheritStyle(this.shadowRoot.querySelector('style'))
       nicknameState.setAttribute('nickname', this.userNickname)
-      this.currentState = this._pwdApp.appendChild(nicknameState)
+      this.currentState = this._mainApp.appendChild(nicknameState)
       /* Starts the game when a valid nickname has been submitted */
       this.currentState.addEventListener('nicknameSet', (e) => {
         this.userNickname = e.detail.nickname
-        this.totalTime = 0
+        // Set game type based on which button was pressed.
         this.gameType = Number(e.detail.game)
+        // Reset game data.
         this.wins = 0
         this.losses = 0
         this.ties = 0
         this.score = 0
-        this.gamesPlayed = 0
-        const selectedSoundEffect = this.getRndInteger(0, 4)
+        this.gameRoundsPlayed = 0
+        // Play sound effect to confirm game type choice.
+        const selectedSoundEffect = this.GetRandomInteger(0, 4)
         this.dispatchEvent(new window.CustomEvent(
           'playSFX', { detail: { name: 'confirm-beep-' + selectedSoundEffect } }))
         //this.dispatchEvent(new window.CustomEvent(
         //  'playMusic', { detail: { name: 'main-theme' } }))
-        this.DisplayMemoryGameState()
+        this.DisplayTicTacToeState()
       })
     }
 
     /**
      * Displays in-game state.
      */
-     DisplayMemoryGameState () {
+    DisplayTicTacToeState () {
       if (this.currentState !== null) {
-        this._pwdApp.removeChild(this.currentState)
+        this._mainApp.removeChild(this.currentState)
       }
       /* Creates a new Memory state with inherited CSS style */
-      const memoryState = document.createElement('memory-state')
-      memoryState.InheritStyle(this.shadowRoot.querySelector('style'))
-      this.currentState = this._pwdApp.appendChild(memoryState)
+      const ticTacToeState = document.createElement('tic-tac-toe-state')
+      ticTacToeState.InheritStyle(this.shadowRoot.querySelector('style'))
+      this.currentState = this._mainApp.appendChild(ticTacToeState)
+      // Starts a new game round by passing the current game data to the StartGameAPIGet
+      // method of the new Tic Tac Toe state.
       this.currentState.StartGameAPIGet(
-        { gameType: this.gameType,
+        {
+          gameType: this.gameType,
           wins: this.wins,
           losses: this.losses,
           ties: this.ties,
           score: this.score,
-          gamesPlayed: this.gamesPlayed })
+          gameRoundsPlayed: this.gameRoundsPlayed
+        })
+      // Adds an event listener for playSFX events to the current state - this is a
+      // temporary bug fix.
       this.currentState.addEventListener('playSFX', (event) => {
         this.PlaySound('sfx', event)
       })
       this.currentState.addEventListener('gameOver', (event) => {
+        // Updates game data based on the outcome of the last game round.
         if (event.detail === null) {
           this.ties++
         } else if (event.detail === 'PLAYER') {
@@ -307,22 +338,29 @@ customElements.define('tic-tac-toe',
         } else {
           this.ties++
         }
-        this.UpdateScoreFromWinsLossesAndTies()
-        this.UpdateGamesPlayed()
-        if (this.gamesPlayed === this.gameType) {
+        this.UpdateScoreFromWinsAndLosses()
+        this.UpdateGameRoundsPlayed()
+        if (this.gameRoundsPlayed === this.gameType) {
           this.AllGameRoundsHaveFinished()
         } else {
-          this.DisplayMemoryGameState()
+          // Start a new game round if the previous round wasn't the last.
+          this.DisplayTicTacToeState()
         }
       })
     }
 
-    AllGameRoundsHaveFinished() {
+    /**
+     * Triggered at the end of the last game round. If having played more than just a single game round,
+     * the user will first be shown a message and then the highscores of the selected game type.
+     */
+    AllGameRoundsHaveFinished () {
       if (this.gameType === 1) {
+        // If the user has only played a single game round, return immediately to the title screen.
         this.DisplayNicknameState()
       } else {
         let message = null
         if (this.score === this.gameType) {
+          // User has won all possible game rounds.
           this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: 'all-win' } }))
           message = [
             `Congratulations ${this.userNickname}!\n
@@ -330,51 +368,57 @@ customElements.define('tic-tac-toe',
             That's great!`
           ]
         } else if (this.score > 0) {
+          // User has won more game rounds than the AI.
           this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: 'all-win' } }))
           message = [
             `Congratulations ${this.userNickname}!\n
             Out of ${this.gameType} games, you won ${this.wins}.`
           ]
         } else if (this.score < 0) {
+          // The AI won more game rounds than the user.
           this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: 'all-lose' } }))
           message = [
             `Out of ${this.gameType} games, you won ${this.wins}.\n
             Better luck next time!`
           ]
         } else if (this.score === 0) {
+          // The result is a tie.
           this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: 'tie' } }))
           message = [
             `You ended up with a total score of ${this.score}.\n
             That means it's a tie!`
           ]
         }
-        this.DisplayTimedMessage(message, 3000, (e) => { this.DisplayHighscoreState() })
+        this.DisplayTimedMessage(message, 4000, (e) => { this.DisplayHighscoreState() })
       }
     }
 
-    UpdateScoreFromWinsLossesAndTies () {
+    /**
+     * Calculates the player's score based on the total amounts of wins and losses.
+     */
+    UpdateScoreFromWinsAndLosses () {
       this.score = this.wins + (this.losses * -1)
     }
 
-    UpdateGamesPlayed () {
-      this.gamesPlayed = this.wins + this.losses + this.ties
+    /**
+     * Updates total amount of game rounds played from the sum of the player's wins, losses and ties.
+     */
+    UpdateGameRoundsPlayed () {
+      this.gameRoundsPlayed = this.wins + this.losses + this.ties
     }
 
     /**
-     * Creates and displays the highscore screen when the player has finished the game.
-     *
-     * @param {number} mistakes - The number of mismatches the player made during the game.
-     * @param {number} time - The time it took for the player to finish the game, in milliseconds.
+     * Creates and displays the highscore screen when the player has finished all game rounds.
      */
     DisplayHighscoreState () {
-      this._pwdApp.removeChild(this.currentState)
+      this._mainApp.removeChild(this.currentState)
       /* Create highscore screen */
       const highscoreState = document.createElement('highscore-state')
       highscoreState.setAttribute('name', this.userNickname)
       highscoreState.setAttribute('score', this.score)
       highscoreState.setAttribute('game', this.gameType)
       highscoreState.InheritStyle(this.shadowRoot.querySelector('style'))
-      this.currentState = this._pwdApp.appendChild(highscoreState)
+      this.currentState = this._mainApp.appendChild(highscoreState)
       /* Add event listener that sends the player back to the nickname screen
          after pressing enter or clicking the mouse */
       this.currentState.addEventListener('proceedfromhighscores', () => {
@@ -390,13 +434,13 @@ customElements.define('tic-tac-toe',
      * @param {Function} fn - The function to be called after the message has expired.
      */
     async DisplayTimedMessage (message, time, fn) {
-      this._pwdApp.removeChild(this.currentState)
+      this._mainApp.removeChild(this.currentState)
       /* Creates a new message screen with inherited CSS style */
       const messageState = document.createElement('message-state')
       messageState.setAttribute('limit', time)
       messageState.CreateMessageFromStringArray(message)
       messageState.InheritStyle(this.shadowRoot.querySelector('style'))
-      this.currentState = this._pwdApp.appendChild(messageState)
+      this.currentState = this._mainApp.appendChild(messageState)
       this.currentState.addEventListener('messagetimerzero', fn)
     }
 
@@ -417,8 +461,15 @@ customElements.define('tic-tac-toe',
       }`
     }
 
-    getRndInteger(min, max) {
-      return Math.floor(Math.random() * (max - min) ) + min;
+    /**
+     * Utility function for getting a random integer within a specified range.
+     *
+     * @param {number} min - The minimum number returned (inclusive).
+     * @param {number} max - The maximum number returned (exclusive).
+     * @returns {number} - A random number between the min and max values.
+     */
+    GetRandomInteger (min, max) {
+      return Math.floor(Math.random() * (max - min)) + min
     }
 
     /**
@@ -452,10 +503,7 @@ customElements.define('tic-tac-toe',
     /**
      * Called after the element has been removed from the DOM.
      */
-    disconnectedCallback () {
-      /* Clears any remaining event listeners when element is removed from DOM */
-      clearInterval(this._clockUpdateInterval)
-    }
+    disconnectedCallback () {}
 
     /**
      * Run the specified instance property

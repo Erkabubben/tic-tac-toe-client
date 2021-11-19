@@ -20,9 +20,12 @@
   "license": "MIT",
   "private": true,
   "devDependencies": {
+    "@babel/core": "^7.16.0",
+    "@babel/eslint-parser": "^7.16.3",
     "@lnu/eslint-config": "^1.1.0",
     "chai": "^4.2.0",
-    "eslint": "^7.9.0",
+    "eslint": "^7.32.0",
+    "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-jsdoc": "^30.5.1",
     "eslint-plugin-node": "^11.1.0",
@@ -44,6 +47,5 @@
     "devOptions": {
       "bundle": false
     }
-  },
-  "dependencies": {}
+  }
 }

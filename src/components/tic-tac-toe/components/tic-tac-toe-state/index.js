@@ -1,2 +1,2 @@
 // It is best practice to have a index.js as root of the component.
-import './countdown-timer.js'
+import './tic-tac-toe-state.js'

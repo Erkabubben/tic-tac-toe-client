@@ -1,7 +1,7 @@
 /**
  * The nickname-state web component module.
  *
- * @author Erik Lindholm <elimk06@student.lnu.se>
+ * @author Erik Lindholm <eriklindholm87@hotmail.com>
  * @version 1.0.0
  */
 const pathToModule = import.meta.url
@@ -308,7 +308,7 @@ customElements.define('nickname-state',
             this._selectedElement = (this._selectables.length - 1)
           }
           this._selectables[this._selectedElement].focus()
-        /* Dispatches nicknameSet event to proceed to memory-state when pressing Enter,
+        /* Dispatches nicknameSet event to proceed to tic-tac-toe-state when pressing Enter,
            if game button is highlighted and nickname has been set */
         } else if (event.keyCode === 13 && this._selectedElement !== 0) { // Enter, when game button is selected...
           event.preventDefault()

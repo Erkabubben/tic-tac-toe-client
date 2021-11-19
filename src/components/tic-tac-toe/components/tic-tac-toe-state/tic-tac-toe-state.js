@@ -1,11 +1,10 @@
 /**
- * The memory-state web component module.
+ * The tic-tac-toe-state web component module.
  *
- * @author Erik Lindholm <elimk06@student.lnu.se>
+ * @author Erik Lindholm <eriklindholm87@hotmail.com>
  * @version 1.0.0
  */
-import './components/flipping-tile/index.js'
-import './components/countdown-timer/index.js'
+import './components/tic-tac-toe-tile/index.js'
 const pathToModule = import.meta.url
 const imagesOfParentPath = new URL('../../img/', pathToModule)
 
@@ -15,7 +14,7 @@ const imagesOfParentPath = new URL('../../img/', pathToModule)
 const template = document.createElement('template')
 template.innerHTML = `
   <style>
-    #memory-state {
+    #tic-tac-toe-state {
       background-color: white;
       position: absolute;
       top: 50%;
@@ -29,7 +28,7 @@ template.innerHTML = `
       left: 0px;
       top: 0px;
     }
-    @keyframes cards-area-appear {
+    @keyframes tiles-area-appear {
       0% {
         opacity: 0.5;
         top: -50%;
@@ -43,14 +42,14 @@ template.innerHTML = `
         transform: rotate(deg)
       }
     }
-    #cards-area {
+    #tiles-area {
       width: max-content;
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       background-image: url("${imagesOfParentPath}square-paper-bg-0.jpg");
-      animation-name: cards-area-appear;
+      animation-name: tiles-area-appear;
       animation-duration: 0.5s;
       animation-timing-function: ease-out;
     }
@@ -111,9 +110,9 @@ template.innerHTML = `
       text-align: center;
     }
   </style>
-  <div id="memory-state">
+  <div id="tic-tac-toe-state">
     <div id="game-area">
-      <div id="cards-area">
+      <div id="tiles-area">
         <div id="h-line-0"></div>
         <div id="h-line-1"></div>
         <div id="v-line-0"></div>
@@ -136,7 +135,7 @@ template.innerHTML = `
 /**
  * Define custom element.
  */
-customElements.define('memory-state',
+customElements.define('tic-tac-toe-state',
   /**
    *
    */
@@ -152,16 +151,16 @@ customElements.define('memory-state',
       this.attachShadow({ mode: 'open' })
         .appendChild(template.content.cloneNode(true))
 
-      /* Memory state properties */
-      this._memoryState = this.shadowRoot.querySelector('#memory-state')
+      /* State properties */
+      this._memoryState = this.shadowRoot.querySelector('#tic-tac-toe-state')
       this._gameArea = this.shadowRoot.querySelector('#game-area')
-      this._cardsArea = this.shadowRoot.querySelector('#cards-area')
+      this._tilesArea = this.shadowRoot.querySelector('#tiles-area')
       this._winsCounter = this.shadowRoot.querySelector('#winscounter')
       this._lossesCounter = this.shadowRoot.querySelector('#lossescounter')
       this._tiesCounter = this.shadowRoot.querySelector('#tiescounter')
       this._gameNumberCounter = this.shadowRoot.querySelector('#gamenumbercounter')
 
-      this.cardSize = 96 // Default card size
+      this.tileSize = 160 // Default tile size
 
       this.playerSymbol = 'o'
       this.opponentSymbol = 'x'
@@ -176,7 +175,7 @@ customElements.define('memory-state',
       this._lineLength = 0
       this._linesAmount = 0
 
-      /* Properties for tracking which card is currently selected */
+      /* Properties for tracking which tile is currently selected */
       this._selectedTile = 0
       this._selectedTileRow = 0
       this._selectedTileColumn = 0
@@ -209,18 +208,33 @@ customElements.define('memory-state',
     }
 
     /**
-     * Called by pwd-memory to set up a new game after the element has been created.
+     * Retrieves a new question from the server and parses it to a JSON object, which is then
+     * used by DisplayNewQuestion() to create a new question screen.
+     */
+     async StartGameAPIGet (gameData) {
+      try {
+        const response = await window.fetch(this._startGameUri)
+        const responseJSON = await response.json() // Parse response to JSON object
+        this.InitiateGame(gameData, responseJSON)
+      // Error handling
+      } catch (error) {
+        console.log('Error on fetch request!')
+      }
+    }
+
+    /**
+     * Sets up a new game after the element has been created and StartGameAPIGet() has received
+     * a response from the API.
      *
-     * @param {string} gameData - The game type selected in the nickname state.
+     * @param {Object} gameData - Data on the current game (wins, losses, ties, score etc.).
+     * @param {Object} responseJSON - The response to the GET request made by StartGameAPIGet().
      */
     InitiateGame (gameData, responseJSON) {
       this._currentGameID = responseJSON.id
-      console.log('New game ID set to: ' + this._currentGameID)
-
       this._winsCounter.textContent = gameData.wins
       this._lossesCounter.textContent = gameData.losses
       this._tiesCounter.textContent = gameData.ties
-      this._gameNumberCounter.textContent = gameData.gamesPlayed + ' / ' + gameData.gameType
+      this._gameNumberCounter.textContent = gameData.gameRoundsPlayed + ' / ' + gameData.gameType
 
       this._lineLength = 3
       this._linesAmount = 3
@@ -229,27 +243,27 @@ customElements.define('memory-state',
 
       let k = 0
       for (let i = 0; i < this._linesAmount; i++) {
-        const newCardLine = document.createElement('div')
+        const newTileLine = document.createElement('div')
         for (let j = 0; j < this._lineLength; j++) {
-          const newTile = document.createElement('flipping-tile')
+          const newTile = document.createElement('tic-tac-toe-tile')
           newTile.setAttribute('backsideColor', 'yellow')
           newTile.setAttribute('backsideImage', 'backside.jpg')
-          newTile.SetSize(160, 160)
+          newTile.SetSize(this.tileSize, this.tileSize)
           newTile.setAttribute('tabindex', '-1')
           newTile.setState('')
           newTile.row = i
           newTile.column = j
-          newTile.cardID = k
+          newTile.tileID = k
           newTile.addEventListener('click', event => {
               this.OnClickTile(newTile, event)
           })
-          newCardLine.appendChild(newTile)
+          newTileLine.appendChild(newTile)
           this._activeTiles.push(newTile)
           this._tilesColumnRowToID[j + ',' + i] = k
           this._tilesIDToColumnRow[k] = j + ',' + i
           k++
         }
-        this._cardsArea.appendChild(newCardLine)
+        this._tilesArea.appendChild(newTileLine)
       }
 
       this.UpdateTileSelection()
@@ -310,7 +324,7 @@ customElements.define('memory-state',
       if (!this._disableAllInput && event.button === 0) { 
         this._selectedTileColumn = clickedTile.column
         this._selectedTileRow = clickedTile.row
-        this._selectedTile = clickedTile.cardID
+        this._selectedTile = clickedTile.tileID
         this.UpdateTileSelection()
         const tile = this._activeTiles[this._selectedTile]
         await this.SetSelectedTileToPlayerSymbol(tile)
@@ -335,17 +349,11 @@ customElements.define('memory-state',
       }
     }
 
-    PlayConfirmSoundEffect () {
-      const selectedSoundEffect = this.getRndInteger(0, 4)
-      this.dispatchEvent(new window.CustomEvent(
-        'playSFX', { detail: { name: 'confirm-beep-' + selectedSoundEffect } }))
-    }
-
     PlaySoundEffect (sfxName, variantMin, variantMaxExclusive) {
       if (variantMin == null) {
         this.dispatchEvent(new window.CustomEvent( 'playSFX', { detail: { name: sfxName } }))
       } else {
-        const selectedSoundEffect = this.getRndInteger(variantMin, variantMaxExclusive)
+        const selectedSoundEffect = this.GetRandomInteger(variantMin, variantMaxExclusive)
         this.dispatchEvent(new window.CustomEvent(
           'playSFX', { detail: { name: sfxName + '-' + selectedSoundEffect } }))
       }
@@ -366,8 +374,6 @@ customElements.define('memory-state',
           body: moveJSONstringified
         })
         const responseJSON = await response.json() // Parse response to JSON object
-        console.log(responseJSON)
-        console.log(responseJSON.moves)
         const lastMove = this.GetLastMove(responseJSON)
         if (lastMove.player == 'AI') {
           const opponentResponseTile = this._activeTiles[lastMove.position]
@@ -448,35 +454,27 @@ customElements.define('memory-state',
     }
 
     /**
-     * Retrieves a new question from the server and parses it to a JSON object, which is then
-     * used by DisplayNewQuestion() to create a new question screen.
-     */
-    async StartGameAPIGet (gameData) {
-      try {
-        const response = await window.fetch(this._startGameUri)
-        const responseJSON = await response.json() // Parse response to JSON object
-        this.InitiateGame(gameData, responseJSON)
-      // Error handling
-      } catch (error) {
-        console.log('Error on fetch request!')
-      }
-    }
-
-    /**
-     * Updates the 'part' attribute of each card, so that only the card whose cardID
-     * is equal to the _selectedCard property will be displayed as selected.
+     * Updates the 'part' attribute of each tile, so that only the tile whose tileID
+     * is equal to the _selectedTile property will be displayed as selected.
      */
     UpdateTileSelection () {
       for (let i = 0; i < this._activeTiles.length; i++) {
         const tile = this._activeTiles[i]
-        if (tile.cardID === this._selectedTile) {
+        if (tile.tileID === this._selectedTile) {
           tile._div.focus()
         }
       }
     }
 
-    getRndInteger(min, max) {
-      return Math.floor(Math.random() * (max - min) ) + min;
+    /**
+     * Utility function for getting a random integer within a specified range.
+     *
+     * @param {number} min - The minimum number returned (inclusive).
+     * @param {number} max - The maximum number returned (exclusive).
+     * @returns {number} - A random number between the min and max values.
+     */
+     GetRandomInteger (min, max) {
+      return Math.floor(Math.random() * (max - min)) + min
     }
 
     /**
