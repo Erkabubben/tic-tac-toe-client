@@ -181,18 +181,12 @@ customElements.define('memory-state',
       this._selectedTileRow = 0
       this._selectedTileColumn = 0
 
-      /* The ID's of the cards in the current game */
+      /* The ID's of the tiles in the current game */
       this._activeTiles = []
 
-      /* References for easy conversions between card ID and column/row numbers */
-      this._cardsColumnRowToID = {}
-      this._cardsIDToColumnRow = {}
-
-      /* Properties used when checking if flipped cards are a valid pair */
-      this._amountOfCardsOfPairFlipped = 0
-      this._cardsOfPair1 = -1
-      this._cardsOfPair2 = -1
-      this._cardsPairTimeout = 0
+      /* References for easy conversions between tile ID and column/row numbers */
+      this._tilesColumnRowToID = {}
+      this._tilesIDToColumnRow = {}
 
       /* Event Listener that will set focus to the previously selected element when
          clicking inside the state */
@@ -251,8 +245,8 @@ customElements.define('memory-state',
           })
           newCardLine.appendChild(newTile)
           this._activeTiles.push(newTile)
-          this._cardsColumnRowToID[j + ',' + i] = k
-          this._cardsIDToColumnRow[k] = j + ',' + i
+          this._tilesColumnRowToID[j + ',' + i] = k
+          this._tilesIDToColumnRow[k] = j + ',' + i
           k++
         }
         this._cardsArea.appendChild(newCardLine)
@@ -290,7 +284,7 @@ customElements.define('memory-state',
           }
         }
 
-        this._selectedTile = this._cardsColumnRowToID[this._selectedTileColumn + ',' + this._selectedTileRow]
+        this._selectedTile = this._tilesColumnRowToID[this._selectedTileColumn + ',' + this._selectedTileRow]
         this.UpdateTileSelection()
         if (event.keyCode === 13) {
           this.OnEnterTile(event)
@@ -334,7 +328,7 @@ customElements.define('memory-state',
       if (tile.getAttribute('state') != this.playerSymbol
         && tile.getAttribute('state') != this.opponentSymbol) {
           this._disableAllInput = true
-          this.PlayConfirmSoundEffect()
+          this.PlaySoundEffect('confirm-beep', 0, 4)
           tile.setState(this.playerSymbol)
           await this.AwaitAnimationEnd(tile.currentSymbolImg)
           await this.PlayerMoveAPIPost(this._selectedTile)
@@ -343,8 +337,18 @@ customElements.define('memory-state',
 
     PlayConfirmSoundEffect () {
       const selectedSoundEffect = this.getRndInteger(0, 4)
-      console.log(this.dispatchEvent(new window.CustomEvent(
-        'playSFX', { detail: { name: 'confirm-beep-' + selectedSoundEffect } })))
+      this.dispatchEvent(new window.CustomEvent(
+        'playSFX', { detail: { name: 'confirm-beep-' + selectedSoundEffect } }))
+    }
+
+    PlaySoundEffect (sfxName, variantMin, variantMaxExclusive) {
+      if (variantMin == null) {
+        this.dispatchEvent(new window.CustomEvent( 'playSFX', { detail: { name: sfxName } }))
+      } else {
+        const selectedSoundEffect = this.getRndInteger(variantMin, variantMaxExclusive)
+        this.dispatchEvent(new window.CustomEvent(
+          'playSFX', { detail: { name: sfxName + '-' + selectedSoundEffect } }))
+      }
     }
 
     /**
@@ -383,16 +387,24 @@ customElements.define('memory-state',
 
     async OnGameOver (json) {
       this._disableAllInput = true
-      console.log('game has ended!')
       if (json.winner != null) {
+        if (json.winner === 'PLAYER') {
+          this.PlaySoundEffect('win', 0, 4)
+        } else if (json.winner === 'AI') {
+          this.PlaySoundEffect('lose', 0, 4)
+        }
         const winnerTiles = this.GetWinnerTiles(json)
-        console.log(winnerTiles)
         if (winnerTiles != null) {
           winnerTiles.forEach(tileID => {
             this._activeTiles[tileID].startWinnerAnimation()
           })
           await this.AwaitAnimationEnd(this._activeTiles[winnerTiles[0]].currentSymbolImg)
         }
+      } else {
+        // Just play sound effect and wait if game is a tie.
+        this.PlaySoundEffect('tie')
+        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        await delay(2000)
       }
       this._disableAllInput = false
       this.dispatchEvent(new window.CustomEvent('gameOver', { detail: json.winner }))

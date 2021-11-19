@@ -175,7 +175,18 @@ customElements.define('tic-tac-toe',
           { name: 'confirm-beep-0', file: 'Light Drone Sound (button hover) 3.wav' },
           { name: 'confirm-beep-1', file: 'Light Drone Sound (button hover) 7.wav' },
           { name: 'confirm-beep-2', file: 'Light Drone Sound (button hover) 9.wav' },
-          { name: 'confirm-beep-3', file: 'Light Drone Sound (button hover) 11.wav' }
+          { name: 'confirm-beep-3', file: 'Light Drone Sound (button hover) 11.wav' },
+          { name: 'win-0', file: 'Win sound 2.wav' },
+          { name: 'win-1', file: 'Win sound 3.wav' },
+          { name: 'win-2', file: 'Win sound 5.wav' },
+          { name: 'win-3', file: 'Win sound 6.wav' },
+          { name: 'lose-0', file: 'Debuff Downgrade 13.wav' },
+          { name: 'lose-1', file: 'Debuff Downgrade 14.wav' },
+          { name: 'lose-2', file: 'Debuff Downgrade 15.wav' },
+          { name: 'lose-3', file: 'Debuff Downgrade 16.wav' },
+          { name: 'tie', file: 'Error Sound 13.wav' },
+          { name: 'all-win', file: 'Win sound 16.wav' },
+          { name: 'all-lose', file: 'Lost sound 21.wav', volume: 0.15 },
         ]
 
         const availableMusicTracks = [
@@ -312,22 +323,26 @@ customElements.define('tic-tac-toe',
       } else {
         let message = null
         if (this.score === this.gameType) {
+          this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: 'all-win' } }))
           message = [
             `Congratulations ${this.userNickname}!\n
             You won all ${this.wins} games!!\n
             That's great!`
           ]
         } else if (this.score > 0) {
+          this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: 'all-win' } }))
           message = [
             `Congratulations ${this.userNickname}!\n
             Out of ${this.gameType} games, you won ${this.wins}.`
           ]
         } else if (this.score < 0) {
+          this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: 'all-lose' } }))
           message = [
             `Out of ${this.gameType} games, you won ${this.wins}.\n
             Better luck next time!`
           ]
         } else if (this.score === 0) {
+          this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: 'tie' } }))
           message = [
             `You ended up with a total score of ${this.score}.\n
             That means it's a tie!`

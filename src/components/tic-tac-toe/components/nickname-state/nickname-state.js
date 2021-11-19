@@ -180,7 +180,7 @@ template.innerHTML = `
       font-weight: bold;
       background-color: #444444;
       border: 2px outset #444444;
-      width: 3rem;
+      width: 4rem;
     }
 
     form button:hover {
