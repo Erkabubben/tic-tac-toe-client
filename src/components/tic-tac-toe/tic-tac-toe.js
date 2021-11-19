@@ -12,7 +12,6 @@ import './components/highscore-state/index.js'
 
 const pathToModule = import.meta.url
 const imagesPath = new URL('./img/', pathToModule)
-const componentsPath = new URL('./components/', pathToModule)
 const sfxPath = new URL('./audio/sfx/', pathToModule)
 const musicPath = new URL('./audio/music/', pathToModule)
 
@@ -192,8 +191,10 @@ customElements.define('tic-tac-toe',
 
       // List of all music tracks and their paths within the 'audio/music' folder.
       const availableMusicTracks = [
-        { name: 'main-theme', file: 'Undergrowth (Loopable).mp3', volume: 0.5 }
+        { name: 'main-theme', file: 'Hoping Version 2 (Loopable).mp3', volume: 0.03, loop: true }
       ]
+
+      this._musicIsPlaying = false
 
       // Set up audio.
       this.AudioSetup(availableSoundEffects, availableMusicTracks)
@@ -233,6 +234,9 @@ customElements.define('tic-tac-toe',
           newAudioElement.textContent = 'Your browser does not support the audio element.'
           if (element.volume) {
             newAudioElement.volume = element.volume
+          }
+          if (element.loop) {
+            newAudioElement.loop = element.loop
           }
           const newSourceElement = document.createElement('source')
           newSourceElement.setAttribute('src', basePath + element.file)
@@ -294,8 +298,11 @@ customElements.define('tic-tac-toe',
         const selectedSoundEffect = this.GetRandomInteger(0, 4)
         this.dispatchEvent(new window.CustomEvent(
           'playSFX', { detail: { name: 'confirm-beep-' + selectedSoundEffect } }))
-        //this.dispatchEvent(new window.CustomEvent(
-        //  'playMusic', { detail: { name: 'main-theme' } }))
+        if (!this._musicIsPlaying) {
+          this.dispatchEvent(new window.CustomEvent(
+            'playMusic', { detail: { name: 'main-theme' } }))
+          this._musicIsPlaying = true
+        }
         this.DisplayTicTacToeState()
       })
     }
@@ -307,7 +314,7 @@ customElements.define('tic-tac-toe',
       if (this.currentState !== null) {
         this._mainApp.removeChild(this.currentState)
       }
-      /* Creates a new Memory state with inherited CSS style */
+      /* Creates a new Tic Tac Toe state with inherited CSS style */
       const ticTacToeState = document.createElement('tic-tac-toe-state')
       ticTacToeState.InheritStyle(this.shadowRoot.querySelector('style'))
       this.currentState = this._mainApp.appendChild(ticTacToeState)

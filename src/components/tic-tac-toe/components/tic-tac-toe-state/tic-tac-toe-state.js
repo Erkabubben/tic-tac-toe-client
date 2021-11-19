@@ -152,7 +152,7 @@ customElements.define('tic-tac-toe-state',
         .appendChild(template.content.cloneNode(true))
 
       /* State properties */
-      this._memoryState = this.shadowRoot.querySelector('#tic-tac-toe-state')
+      this._ticTacToeState = this.shadowRoot.querySelector('#tic-tac-toe-state')
       this._gameArea = this.shadowRoot.querySelector('#game-area')
       this._tilesArea = this.shadowRoot.querySelector('#tiles-area')
       this._winsCounter = this.shadowRoot.querySelector('#winscounter')
@@ -167,6 +167,9 @@ customElements.define('tic-tac-toe-state',
       this._startGameUri = 'http://localhost:8080/games/start'
       this._playerMovePostBaseUri = 'http://localhost:8080/games/'
       this._currentGameID = ''
+
+      // Disables all user input when set to true - used to avoid race conditions caused by
+      // user input while animations are playing.
       this._disableAllInput = false
 
       /* The total amount of tiles, rows and columns at the start of the game  - set from
