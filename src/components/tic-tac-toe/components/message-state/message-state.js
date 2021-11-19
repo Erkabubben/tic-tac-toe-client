@@ -56,11 +56,13 @@ customElements.define('message-state',
       this.attachShadow({ mode: 'open' })
         .appendChild(template.content.cloneNode(true))
 
-      /* Set up properties */
+      /* Set up state properties */
       this._messageState = this.shadowRoot.querySelector('#message-state')
       this._messageContainer = this.shadowRoot.querySelector('#message-container')
       this._message = this._messageState.querySelector('h2')
 
+      // Adds note-appear class to message container to trigger CSS animation when state
+      // is displayed.
       this._messageContainer.classList.add('note-appear')
 
       /* Countdown properties */
@@ -83,11 +85,16 @@ customElements.define('message-state',
       })
     }
 
+    /**
+     * Sets up an Event listener listening for a HTMLElement's CSS animation to end.
+     * Used with 'await' to yield an asynchronous function until an animation has finished.
+     *
+     * @param {HTMLElement} element - The animated element
+     * @returns {Promise} - A promise that resolves when the element's animation has finished.
+     */
     async AwaitAnimationEnd (element) {
       return new Promise(function (resolve, reject) {
-        element.addEventListener('animationend', () => {
-          resolve()
-        })
+        element.addEventListener('animationend', () => { resolve() })
       })
     }
 
@@ -126,10 +133,14 @@ customElements.define('message-state',
       }, this._timeLimitInMS)
     }
 
+    /**
+     * Code to be triggered when the message timer has reached zero.
+     */
     async CountdownHasReachedZero () {
+      // Trigger exit animation.
       this._messageContainer.classList.remove('note-appear')
       this._messageContainer.classList.add('note-disappear')
-      // Await exit animation before dispatching exit event
+      // Await exit animation before dispatching exit event.
       await this.AwaitAnimationEnd(this._messageContainer)
       this.dispatchEvent(new window.CustomEvent('messagetimerzero'))
     }

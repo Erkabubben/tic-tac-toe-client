@@ -122,7 +122,7 @@ customElements.define('highscore-state',
     static get observedAttributes () {
       return [
         'name',
-        'mistakes',
+        'score',
         'game'
       ]
     }
@@ -132,19 +132,27 @@ customElements.define('highscore-state',
      * highscore screen.
      */
     async Proceed () {
+      // Remove click and keydown Event listeners
       document.removeEventListener('click', this.dispatchClickEvent)
       document.removeEventListener('keydown', this.dispatchKeyEvent)
+      // Start exit animation
       this._highscoreContainer.classList.remove('note-appear')
       this._highscoreContainer.classList.add('note-disappear')
+      // Await exit animation before dispatching exit Event
       await this.AwaitAnimationEnd(this._highscoreContainer)
       this.dispatchEvent(new window.CustomEvent('proceedfromhighscores'))
     }
 
+    /**
+     * Sets up an Event listener listening for a HTMLElement's CSS animation to end.
+     * Used with 'await' to yield an asynchronous function until an animation has finished.
+     *
+     * @param {HTMLElement} element - The animated element
+     * @returns {Promise} - A promise that resolves when the element's animation has finished.
+     */
     async AwaitAnimationEnd (element) {
       return new Promise(function (resolve, reject) {
-        element.addEventListener('animationend', () => {
-          resolve()
-        })
+        element.addEventListener('animationend', () => { resolve() })
       })
     }
 

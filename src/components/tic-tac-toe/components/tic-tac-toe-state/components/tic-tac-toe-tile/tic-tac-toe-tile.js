@@ -202,6 +202,9 @@ customElements.define('tic-tac-toe-tile',
       this.updateImageSrcAttribute()
     }
 
+    /**
+     * Starts the tile's winner animation.
+     */
     startWinnerAnimation () {
       this.currentSymbolImg.classList.remove('appearing-symbol')
       this.currentSymbolImg.classList.add('winner-symbol')
@@ -214,23 +217,25 @@ customElements.define('tic-tac-toe-tile',
      * @param {number} max - The maximum number returned (exclusive).
      * @returns {number} - A random number between the min and max values.
      */
-     GetRandomInteger (min, max) {
+    GetRandomInteger (min, max) {
       return Math.floor(Math.random() * (max - min)) + min
     }
 
     /**
-     * Updates the tile to show either the front or the backside.
+     * Updates the tile to show either the X or O symbyl or neither.
      */
     updateImageSrcAttribute () {
-      if (this.getAttribute('state') == 'x') {
+      if (this.getAttribute('state') === 'x') {
         this._oImg.classList.add('hidden')
         this._xImg.classList.remove('hidden')
         this.currentSymbolImg = this._xImg
+        // Trigger appear animation.
         this.currentSymbolImg.classList.add('appearing-symbol')
-      } else if (this.getAttribute('state') == 'o') {
+      } else if (this.getAttribute('state') === 'o') {
         this._xImg.classList.add('hidden')
         this._oImg.classList.remove('hidden')
         this.currentSymbolImg = this._oImg
+        // Trigger appear animation.
         this.currentSymbolImg.classList.add('appearing-symbol')
       } else {
         this._oImg.classList.add('hidden')
@@ -244,12 +249,12 @@ customElements.define('tic-tac-toe-tile',
     connectedCallback () {}
 
     /**
-     * Flips the tile and dispatches a 'tileflip' event with the tile's innerHTML value.
+     * Sets the state attribute and updates the tile.
+     *
+     * @param {string} newState - Value to set the tile's 'state' attribute to.
      */
     setState (newState) {
       this.setAttribute('state', newState)
-      let printMessage = 'State is now ' + this.getAttribute('state')
-      this.dispatchEvent(new window.CustomEvent('tileflip', { detail: printMessage }))
       this.updateImageSrcAttribute()
     }
   })

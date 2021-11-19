@@ -171,9 +171,9 @@ customElements.define('tic-tac-toe-state',
 
       /* The total amount of tiles, rows and columns at the start of the game  - set from
          the gameType parameter by InitiateGame() */
-      this._startingTilesAmount = 0
-      this._lineLength = 0
-      this._linesAmount = 0
+      this._lineLength = 3
+      this._linesAmount = 3
+      this._startingTilesAmount = this._lineLength * this._linesAmount
 
       /* Properties for tracking which tile is currently selected */
       this._selectedTile = 0
@@ -189,9 +189,7 @@ customElements.define('tic-tac-toe-state',
 
       /* Event Listener that will set focus to the previously selected element when
          clicking inside the state */
-      this.addEventListener('click', () => {
-        this.UpdateTileSelection()
-      })
+      this.addEventListener('click', () => { this.UpdateTileSelection() })
     }
 
     /**
@@ -210,8 +208,10 @@ customElements.define('tic-tac-toe-state',
     /**
      * Retrieves a new question from the server and parses it to a JSON object, which is then
      * used by DisplayNewQuestion() to create a new question screen.
+     *
+     * @param {object} gameData - Data on the current game (wins, losses, ties, score etc.).
      */
-     async StartGameAPIGet (gameData) {
+    async StartGameAPIGet (gameData) {
       try {
         const response = await window.fetch(this._startGameUri)
         const responseJSON = await response.json() // Parse response to JSON object
@@ -226,37 +226,32 @@ customElements.define('tic-tac-toe-state',
      * Sets up a new game after the element has been created and StartGameAPIGet() has received
      * a response from the API.
      *
-     * @param {Object} gameData - Data on the current game (wins, losses, ties, score etc.).
-     * @param {Object} responseJSON - The response to the GET request made by StartGameAPIGet().
+     * @param {object} gameData - Data on the current game (wins, losses, ties, score etc.).
+     * @param {object} responseJSON - The response to the GET request made by StartGameAPIGet().
      */
     InitiateGame (gameData, responseJSON) {
+      // Sets current game ID to the ID in the response JSON.
       this._currentGameID = responseJSON.id
+
+      // Updates counters in UI area based on the contents of the gameData object.
       this._winsCounter.textContent = gameData.wins
       this._lossesCounter.textContent = gameData.losses
       this._tiesCounter.textContent = gameData.ties
       this._gameNumberCounter.textContent = gameData.gameRoundsPlayed + ' / ' + gameData.gameType
 
-      this._lineLength = 3
-      this._linesAmount = 3
-
-      this._startingTilesAmount = this._lineLength * this._linesAmount
-
+      // Creates and adds Tic Tac Toe tiles to tiles area.
       let k = 0
       for (let i = 0; i < this._linesAmount; i++) {
         const newTileLine = document.createElement('div')
         for (let j = 0; j < this._lineLength; j++) {
           const newTile = document.createElement('tic-tac-toe-tile')
-          newTile.setAttribute('backsideColor', 'yellow')
-          newTile.setAttribute('backsideImage', 'backside.jpg')
           newTile.SetSize(this.tileSize, this.tileSize)
           newTile.setAttribute('tabindex', '-1')
           newTile.setState('')
           newTile.row = i
           newTile.column = j
           newTile.tileID = k
-          newTile.addEventListener('click', event => {
-              this.OnClickTile(newTile, event)
-          })
+          newTile.addEventListener('click', event => { this.OnClickTile(newTile, event) })
           newTileLine.appendChild(newTile)
           this._activeTiles.push(newTile)
           this._tilesColumnRowToID[j + ',' + i] = k
@@ -274,6 +269,7 @@ customElements.define('tic-tac-toe-state',
        * @param {event} event - The 'keydown' event.
        */
       this.keyDownFunction = (event) => {
+        // Return without doing anything if input is not enabled.
         if (this._disableAllInput) {
           return
         }
@@ -320,8 +316,15 @@ customElements.define('tic-tac-toe-state',
       this.addEventListener('keyup', this.keyUpFunction)
     }
 
+    /**
+     * Code executed when the player clicks a tile with button 0.
+     *
+     * @param {HTMLElement} clickedTile - The tile clicked by the player.
+     * @param {Event} event - The 'onclick' event triggered by the click.
+     */
     async OnClickTile (clickedTile, event) {
-      if (!this._disableAllInput && event.button === 0) { 
+      // Check that input is allowed and that the player has clicked with the primary mouse button.
+      if (!this._disableAllInput && event.button === 0) {
         this._selectedTileColumn = clickedTile.column
         this._selectedTileRow = clickedTile.row
         this._selectedTile = clickedTile.tileID
@@ -331,6 +334,11 @@ customElements.define('tic-tac-toe-state',
       }
     }
 
+    /**
+     * Code executed when the player has selected a tile and pressed Enter.
+     *
+     * @param {Event} event - The 'keydown' event triggered by the Enter press.
+     */
     async OnEnterTile (event) {
       event.preventDefault()
       this.UpdateTileSelection()
@@ -338,20 +346,37 @@ customElements.define('tic-tac-toe-state',
       await this.SetSelectedTileToPlayerSymbol(tile)
     }
 
+    /**
+     * Checks that the specified tile is unoccupied and if so, sets it it to display the player
+     * symbol and then calls PlayerMoveAPIPost().
+     *
+     * @param {HTMLElement} tile - The tile selected by the player.
+     */
     async SetSelectedTileToPlayerSymbol (tile) {
-      if (tile.getAttribute('state') != this.playerSymbol
-        && tile.getAttribute('state') != this.opponentSymbol) {
-          this._disableAllInput = true
-          this.PlaySoundEffect('confirm-beep', 0, 4)
-          tile.setState(this.playerSymbol)
-          await this.AwaitAnimationEnd(tile.currentSymbolImg)
-          await this.PlayerMoveAPIPost(this._selectedTile)
+      if (tile.getAttribute('state') !== this.playerSymbol &&
+        tile.getAttribute('state') !== this.opponentSymbol) {
+        this._disableAllInput = true
+        this.PlaySoundEffect('confirm-beep', 0, 4)
+        tile.setState(this.playerSymbol)
+        await this.AwaitAnimationEnd(tile.currentSymbolImg)
+        await this.PlayerMoveAPIPost(this._selectedTile)
       }
     }
 
+    /**
+     * Plays a sound effect by dispatching a playSFX Event. If variantMin and variantMaxExclusive
+     * parameters are included, a sound effect variant will be picked from the specified range.
+     * For example, only passing 'confirm-choice' will play the sound effect confirm-choice.
+     * Passing 'confirm-choice', 0, 2 will play one of the sound sound effects 'confirm-choice-0',
+     * or 'confirm-choice-1'.
+     *
+     * @param {string} sfxName - The name of the sound effect to be played.
+     * @param {number} variantMin - Lowest number for the range of variants.
+     * @param {number} variantMaxExclusive - Highest number for the range of variants (exclusive).
+     */
     PlaySoundEffect (sfxName, variantMin, variantMaxExclusive) {
       if (variantMin == null) {
-        this.dispatchEvent(new window.CustomEvent( 'playSFX', { detail: { name: sfxName } }))
+        this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: sfxName } }))
       } else {
         const selectedSoundEffect = this.GetRandomInteger(variantMin, variantMaxExclusive)
         this.dispatchEvent(new window.CustomEvent(
@@ -360,14 +385,15 @@ customElements.define('tic-tac-toe-state',
     }
 
     /**
-     * Retrieves a new question from the server and parses it to a JSON object, which is then
-     * used by DisplayNewQuestion() to create a new question screen.
+     * Makes a POST request to the API with the position of the player's move. If the player's
+     * move is followed by an AI move, tiles will be updated to represent the new state of the
+     * board. Also checks if the game round is over, and if so, proceeds to the next state.
      *
-     * @param {string} move - The URL of the question to be retrieved.
+     * @param {number} move - The tile ID of the player's move.
      */
     async PlayerMoveAPIPost (move) {
       try {
-        const moveJSONstringified = await JSON.stringify({ "position": move })
+        const moveJSONstringified = await JSON.stringify({ position: move })
         const response = await window.fetch(this._playerMovePostBaseUri + this._currentGameID, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -375,11 +401,14 @@ customElements.define('tic-tac-toe-state',
         })
         const responseJSON = await response.json() // Parse response to JSON object
         const lastMove = this.GetLastMove(responseJSON)
-        if (lastMove.player == 'AI') {
+        // If the last move in the response is an AI move, update tile and await animation
+        // before proceeding.
+        if (lastMove.player === 'AI') {
           const opponentResponseTile = this._activeTiles[lastMove.position]
           opponentResponseTile.setState(this.opponentSymbol)
           await this.AwaitAnimationEnd(opponentResponseTile.currentSymbolImg)
         }
+        // Check if game is over.
         if (responseJSON.gameOver) {
           await this.OnGameOver(responseJSON)
         } else {
@@ -391,6 +420,11 @@ customElements.define('tic-tac-toe-state',
       }
     }
 
+    /**
+     * Code to be triggered on game over.
+     *
+     * @param {object} json - A JSON response from the API.
+     */
     async OnGameOver (json) {
       this._disableAllInput = true
       if (json.winner != null) {
@@ -409,31 +443,47 @@ customElements.define('tic-tac-toe-state',
       } else {
         // Just play sound effect and wait if game is a tie.
         this.PlaySoundEffect('tie')
-        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-        await delay(2000)
+        await this.Delay(2000)
       }
       this._disableAllInput = false
       this.dispatchEvent(new window.CustomEvent('gameOver', { detail: json.winner }))
     }
 
+    /**
+     * Used with 'await' to temporarily yield the execution of an asynchronous function.
+     *
+     * @param {number} ms - The delay in milliseconds.
+     * @returns {Promise} - A promise that resolves after the given amount of millisecond.
+     */
+    Delay (ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms))
+    }
+
+    /**
+     * Checks the board data in a JSON response from the API and determines which three
+     * tiles are three in a row.
+     *
+     * @param {object} json - A JSON response from the API.
+     * @returns {Array} - The ID's of the winner tiles.
+     */
     GetWinnerTiles (json) {
       const board = json.board
       const possibleWins = [
-        [ 0, 1, 2 ],
-        [ 3, 4, 5 ],
-        [ 6, 7, 8 ],
-        [ 0, 3, 6 ],
-        [ 1, 4, 7 ],
-        [ 2, 5, 8 ],
-        [ 0, 4, 8 ],
-        [ 2, 4, 6 ],
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6]
       ]
 
       for (let i = 0; i < possibleWins.length; i++) {
-        const tilesArray = possibleWins[i];
-        if (board[tilesArray[0].toString()] !== null
-          && board[tilesArray[1].toString()] === board[tilesArray[0].toString()]
-          && board[tilesArray[2].toString()] === board[tilesArray[0].toString()]) {
+        const tilesArray = possibleWins[i]
+        if (board[tilesArray[0].toString()] !== null &&
+          board[tilesArray[1].toString()] === board[tilesArray[0].toString()] &&
+          board[tilesArray[2].toString()] === board[tilesArray[0].toString()]) {
           return tilesArray
         }
       }
@@ -441,15 +491,26 @@ customElements.define('tic-tac-toe-state',
       return null
     }
 
+    /**
+     * Gets the last move from the moves list of a JSON response from the API.
+     *
+     * @param {object} json - A JSON response from the API.
+     * @returns {object} - The last element in the response's moves list.
+     */
     GetLastMove (json) {
       return json.moves[json.moves.length - 1]
     }
 
+    /**
+     * Sets up an Event listener listening for a HTMLElement's CSS animation to end.
+     * Used with 'await' to yield an asynchronous function until an animation has finished.
+     *
+     * @param {HTMLElement} element - The animated element
+     * @returns {Promise} - A promise that resolves when the element's animation has finished.
+     */
     async AwaitAnimationEnd (element) {
       return new Promise(function (resolve, reject) {
-        element.addEventListener('animationend', () => {
-          resolve()
-        })
+        element.addEventListener('animationend', () => { resolve() })
       })
     }
 
@@ -473,7 +534,7 @@ customElements.define('tic-tac-toe-state',
      * @param {number} max - The maximum number returned (exclusive).
      * @returns {number} - A random number between the min and max values.
      */
-     GetRandomInteger (min, max) {
+    GetRandomInteger (min, max) {
       return Math.floor(Math.random() * (max - min)) + min
     }
 
@@ -489,9 +550,7 @@ customElements.define('tic-tac-toe-state',
     /**
      * Called after the element is inserted into the DOM.
      */
-    connectedCallback () {
-
-    }
+    connectedCallback () {}
 
     /**
      * Called when observed attribute(s) changes.
@@ -500,9 +559,7 @@ customElements.define('tic-tac-toe-state',
      * @param {*} oldValue - The old value.
      * @param {*} newValue - The new value.
      */
-    attributeChangedCallback (name, oldValue, newValue) {
-
-    }
+    attributeChangedCallback (name, oldValue, newValue) {}
 
     /**
      * Called after the element has been removed from the DOM.

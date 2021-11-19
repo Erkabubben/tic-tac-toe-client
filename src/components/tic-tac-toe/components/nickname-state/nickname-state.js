@@ -241,8 +241,8 @@ customElements.define('nickname-state',
       this._input = this.shadowRoot.querySelector('input')
       this._alternatives = this.shadowRoot.querySelector('#alternatives')
 
-      /* Sets up the game difficulties to choose from */
-      const gameTypes = ['1', '2', '3', '5', '10', '25']
+      /* Amounts of game rounds to choose from */
+      const gameTypes = ['1', '2', '3', '5', '10', '25', '50']
 
       /* Creates a button for each element in the gameTypes array */
       gameTypes.forEach(element => {
@@ -259,15 +259,15 @@ customElements.define('nickname-state',
               { detail: { nickname: this._input.value, game: newAlternative.value } }))
           }
         })
-        //this._alternatives.appendChild(document.createElement('br'))
       })
 
       /* Properties for determining which element is currently selected */
       this._selectedElement = 0
       this._selectables = this._nicknameState.querySelectorAll('.selectable')
 
+      /* Event listener for focusing and selecting any selectable element being clicked */
       for (let index = 0; index < this._selectables.length; index++) {
-        const element = this._selectables[index];
+        const element = this._selectables[index]
         element.addEventListener('onmousedown', (event) => {
           this._selectables[this._selectedElement].blur()
           this._selectedElement = index
@@ -288,7 +288,8 @@ customElements.define('nickname-state',
        */
       this.keyDownFunction = (event) => {
         /* Using keyboard buttons to navigate the nickname input and game buttons */
-        if (event.keyCode === 40 || (event.keyCode === 13 && this._selectedElement === 0)) { // Down arrowkey, or Enter while on the Input element
+        if (event.keyCode === 40 || (event.keyCode === 13 && this._selectedElement === 0)) {
+          // Down arrowkey, or Enter while on the Input element
           event.preventDefault()
           this._selectables[this._selectedElement].blur()
           this._selectedElement++
@@ -377,7 +378,7 @@ customElements.define('nickname-state',
      * @param {*} newValue - The new value.
      */
     attributeChangedCallback (name, oldValue, newValue) {
-      /* Sets the previous nickname as the default value when returning from the memory */
+      /* Sets the previous nickname as the default value when returning from another state */
       if (name === 'nickname') {
         this._input.setAttribute('value', this.getAttribute('nickname'))
       }
