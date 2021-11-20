@@ -67,7 +67,6 @@ template.innerHTML = `
     }
     #nickname-state, #tic-tac-toe-state, #message-state, #highscore-state {
       position: absolute;
-      font-family: Verdana;
       padding: 0px;
       width: 100%;
       height: 100%;
@@ -78,7 +77,6 @@ template.innerHTML = `
       text-align: center;
     }
     #highscore-state table {
-      font-family: Verdana;
       font-size: 1.25em;
       margin: auto;
       user-select: none;
@@ -123,6 +121,31 @@ template.innerHTML = `
       animation-name: note-disappear;
       animation-duration: 0.75s;
       animation-timing-function: ease-in;
+    }
+    #audio-switches {
+      position: absolute;
+      right: 5%;
+      bottom: 5%;
+    }
+    #audio-switches button {
+      font-family: "Lucida Handwriting", cursive;
+      font-size: 75%;
+    }
+    #audio-switches button.disabled {
+      text-decoration: line-through;
+    }
+    form button, #audio-switches button {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: bold;
+      background-color: #444444;
+      border: 2px outset #444444;
+      width: 4rem;
+    }
+    form button:hover, #audio-switches button:hover {
+      background-color: #999999;
+      border-color: #999999;
     }
   </style>
   <style id="size"></style>
@@ -170,6 +193,11 @@ customElements.define('tic-tac-toe',
       this.score = 0
       this.gameRoundsPlayed = 0
 
+      this._sfxContainer = this.shadowRoot.querySelector('#sound-effects')
+      this._musicContainer = this.shadowRoot.querySelector('#music-tracks')
+      this.sfxMuted = false
+      this.musicMuted = false
+
       // List of all sound effects and their paths within the 'audio/sfx' folder.
       const availableSoundEffects = [
         { name: 'confirm-beep-0', file: 'Light Drone Sound (button hover) 3.wav' },
@@ -191,7 +219,7 @@ customElements.define('tic-tac-toe',
 
       // List of all music tracks and their paths within the 'audio/music' folder.
       const availableMusicTracks = [
-        { name: 'main-theme', file: 'Hoping Version 2 (Loopable).mp3', volume: 0.03, loop: true }
+        { name: 'main-theme', file: 'Hoping Version 2 (Loopable).mp3', volume: 0.05, loop: true }
       ]
 
       this._musicIsPlaying = false
@@ -207,15 +235,16 @@ customElements.define('tic-tac-toe',
      * Takes the arrays of sound effects and music tracks defined in the constructor
      * and sets up Audio and Source Elements based on their contents. Also sets up
      * Event listeners that allows audio to be played by dispatching the custom Events
-     * 'playSFX' and 'playMusic'.
+     * 'play-sfx' and 'play-music'.
      *
      * @param {Array} availableSoundEffects - Array of sound effect names and file paths.
      * @param {Array} availableMusicTracks - Array of music track names and file paths.
      */
     AudioSetup (availableSoundEffects, availableMusicTracks) {
       // Sets up custom event listeners that will play audio on messages from sub-components.
-      this.addEventListener('playSFX', (event) => { this.PlaySound('sfx', event) })
-      this.addEventListener('playMusic', (event) => { this.PlaySound('music', event) })
+      this.addEventListener('play-sfx', (event) => this.PlaySound('sfx', event))
+      this.addEventListener('play-music', (event) => this.PlaySound('music', event))
+      this.addEventListener('toggle-audio', (event) => this.MuteOrUnmuteAudioElementsOfType(event.detail))
 
       /**
        * Sets up Audio and Source elements as children of a specified container, based on the
@@ -246,19 +275,17 @@ customElements.define('tic-tac-toe',
         })
       }
 
-      AddAudioElementsFromAvailableSoundsArray(
-        this.shadowRoot.querySelector('#sound-effects'), sfxPath, availableSoundEffects, 'audio/wav')
-      AddAudioElementsFromAvailableSoundsArray(
-        this.shadowRoot.querySelector('#music-tracks'), musicPath, availableMusicTracks, 'audio/mp3')
+      AddAudioElementsFromAvailableSoundsArray(this._sfxContainer, sfxPath, availableSoundEffects, 'audio/wav')
+      AddAudioElementsFromAvailableSoundsArray(this._musicContainer, musicPath, availableMusicTracks, 'audio/mp3')
     }
 
     /**
      * Takes the arrays of sound effects and music tracks defined in the constructor
      * and sets up Audio and Source Elements based on their contents. Also sets up
      * Event listeners that allows audio to be played by dispatching the custom Events
-     * 'playSFX' and 'playMusic'.
+     * 'play-sfx' and 'play-music'.
      *
-     * @param {string} type - The type of audio to be played.
+     * @param {string} type - The type of audio to be played ('music' or 'sfx').
      * @param {Array} event - The event containing the details on which sound to play.
      */
     PlaySound (type, event) {
@@ -268,6 +295,32 @@ customElements.define('tic-tac-toe',
         audioElement.fastSeek(0)
         audioElement.play()
       }
+    }
+
+    /**
+     * Sets every audio element of the specified type to be muted or unmuted, then updates
+     * the current state's Audio Toggle Buttons.
+     *
+     * @param {string} type - The type of audio to be muted ('music' or 'sfx').
+     */
+    MuteOrUnmuteAudioElementsOfType (type) {
+      const audioElements = type === 'music'
+        ? this._musicContainer.querySelectorAll('audio')
+        : this._sfxContainer.querySelectorAll('audio')
+      audioElements.forEach(element => {
+        element.muted = !element.muted
+      })
+      this.UpdateAudioToggleButtonsOfCurrentState()
+    }
+
+    /**
+     * Calls the UpdateAudioToggleButtons method on the current state, using the states of
+     * the 'muted' attributes of the first element in each sound container as parameters.
+     */
+    UpdateAudioToggleButtonsOfCurrentState () {
+      this.currentState.UpdateAudioToggleButtons(
+        this._sfxContainer.childElementCount > 0 ? this._sfxContainer.firstChild.muted : false,
+        this._musicContainer.childElementCount > 0 ? this._musicContainer.firstChild.muted : false)
     }
 
     /**
@@ -283,8 +336,12 @@ customElements.define('tic-tac-toe',
       nicknameState.InheritStyle(this.shadowRoot.querySelector('style'))
       nicknameState.setAttribute('nickname', this.userNickname)
       this.currentState = this._mainApp.appendChild(nicknameState)
+      // Adds an event listener for toggle-audio events to the current state - temporary bug fix.
+      this.currentState.addEventListener('toggle-audio', (event) =>
+        this.MuteOrUnmuteAudioElementsOfType(event.detail))
+      this.UpdateAudioToggleButtonsOfCurrentState()
       /* Starts the game when a valid nickname has been submitted */
-      this.currentState.addEventListener('nicknameSet', (e) => {
+      this.currentState.addEventListener('nickname-set', (e) => {
         this.userNickname = e.detail.nickname
         // Set game type based on which button was pressed.
         this.gameType = Number(e.detail.game)
@@ -297,10 +354,10 @@ customElements.define('tic-tac-toe',
         // Play sound effect to confirm game type choice.
         const selectedSoundEffect = this.GetRandomInteger(0, 4)
         this.dispatchEvent(new window.CustomEvent(
-          'playSFX', { detail: { name: 'confirm-beep-' + selectedSoundEffect } }))
+          'play-sfx', { detail: { name: 'confirm-beep-' + selectedSoundEffect } }))
         if (!this._musicIsPlaying) {
           this.dispatchEvent(new window.CustomEvent(
-            'playMusic', { detail: { name: 'main-theme' } }))
+            'play-music', { detail: { name: 'main-theme' } }))
           this._musicIsPlaying = true
         }
         this.DisplayTicTacToeState()
@@ -318,6 +375,12 @@ customElements.define('tic-tac-toe',
       const ticTacToeState = document.createElement('tic-tac-toe-state')
       ticTacToeState.InheritStyle(this.shadowRoot.querySelector('style'))
       this.currentState = this._mainApp.appendChild(ticTacToeState)
+      // Adds an event listener for play-sfx events to the current state - temporary bug fix.
+      this.currentState.addEventListener('play-sfx', (event) => { this.PlaySound('sfx', event) })
+      // Adds an event listener for toggle-audio events to the current state - temporary bug fix.
+      this.currentState.addEventListener('toggle-audio', (event) =>
+        this.MuteOrUnmuteAudioElementsOfType(event.detail))
+      this.UpdateAudioToggleButtonsOfCurrentState()
       // Starts a new game round by passing the current game data to the StartGameAPIGet
       // method of the new Tic Tac Toe state.
       this.currentState.StartGameAPIGet(
@@ -329,11 +392,6 @@ customElements.define('tic-tac-toe',
           score: this.score,
           gameRoundsPlayed: this.gameRoundsPlayed
         })
-      // Adds an event listener for playSFX events to the current state - this is a
-      // temporary bug fix.
-      this.currentState.addEventListener('playSFX', (event) => {
-        this.PlaySound('sfx', event)
-      })
       this.currentState.addEventListener('gameOver', (event) => {
         // Updates game data based on the outcome of the last game round.
         if (event.detail === null) {
@@ -368,7 +426,7 @@ customElements.define('tic-tac-toe',
         let message = null
         if (this.score === this.gameType) {
           // User has won all possible game rounds.
-          this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: 'all-win' } }))
+          this.dispatchEvent(new window.CustomEvent('play-sfx', { detail: { name: 'all-win' } }))
           message = [
             `Congratulations ${this.userNickname}!\n
             You won all ${this.wins} games!!\n
@@ -376,21 +434,21 @@ customElements.define('tic-tac-toe',
           ]
         } else if (this.score > 0) {
           // User has won more game rounds than the AI.
-          this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: 'all-win' } }))
+          this.dispatchEvent(new window.CustomEvent('play-sfx', { detail: { name: 'all-win' } }))
           message = [
             `Congratulations ${this.userNickname}!\n
             Out of ${this.gameType} games, you won ${this.wins}.`
           ]
         } else if (this.score < 0) {
           // The AI won more game rounds than the user.
-          this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: 'all-lose' } }))
+          this.dispatchEvent(new window.CustomEvent('play-sfx', { detail: { name: 'all-lose' } }))
           message = [
             `Out of ${this.gameType} games, you won ${this.wins}.\n
             Better luck next time!`
           ]
         } else if (this.score === 0) {
           // The result is a tie.
-          this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: 'tie' } }))
+          this.dispatchEvent(new window.CustomEvent('play-sfx', { detail: { name: 'tie' } }))
           message = [
             `You ended up with a total score of ${this.score}.\n
             That means it's a tie!`

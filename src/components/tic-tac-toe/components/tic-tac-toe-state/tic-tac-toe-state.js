@@ -170,6 +170,10 @@ template.innerHTML = `
       <h1 id="lossescounter"></h1>
       <h1 id="tiestext">Ties:</h1>
       <h1 id="tiescounter"></h1>
+      <div id="audio-switches">
+        <button name="music-switch" id="music-switch">Music</button>
+        <button name="sfx-switch" id="sfx-switch">SFX</button>
+      </div>
     </div>
   </div>
 `
@@ -215,6 +219,19 @@ customElements.define('tic-tac-toe-state',
       this._playerMovePostBaseUri = 'http://localhost:8080/games/'
       this._currentGameID = ''
 
+      // Audio mute buttons setup.
+      this._musicSwitchButton = this.shadowRoot.querySelector('#music-switch')
+      this._sfxSwitchButton = this.shadowRoot.querySelector('#sfx-switch')
+
+      this._musicSwitchButton.addEventListener('click', (event) => { // Checks if the mouse has been clicked
+        event.preventDefault()
+        this.dispatchEvent(new window.CustomEvent('toggle-audio', { detail: 'music' }))
+      })
+      this._sfxSwitchButton.addEventListener('click', (event) => { // Checks if the mouse has been clicked
+        event.preventDefault()
+        this.dispatchEvent(new window.CustomEvent('toggle-audio', { detail: 'sfx' }))
+      })
+
       // Disables all user input when set to true - used to avoid race conditions caused by
       // user input while animations are playing.
       this._disableAllInput = false
@@ -253,6 +270,24 @@ customElements.define('tic-tac-toe-state',
       style.id = 'inherited'
       style.textContent = styleElement.textContent
       this.shadowRoot.appendChild(style)
+    }
+
+    /**
+     * Updates the states of the Audio Toggle Buttons based on the parameters. Usually called when
+     * initiating the state and whenever the user clicks one of the buttons.
+     *
+     * @param {boolean} sfxMuted - Bool indicating whether or not sound effects audio elements are muted.
+     * @param {boolean} musicMuted - Bool indicating whether or not music audio elements are muted.
+     */
+    UpdateAudioToggleButtons (sfxMuted, musicMuted) {
+      this._sfxSwitchButton.classList.remove('disabled')
+      this._musicSwitchButton.classList.remove('disabled')
+      if (sfxMuted) {
+        this._sfxSwitchButton.classList.add('disabled')
+      }
+      if (musicMuted) {
+        this._musicSwitchButton.classList.add('disabled')
+      }
     }
 
     /**
@@ -414,7 +449,7 @@ customElements.define('tic-tac-toe-state',
     }
 
     /**
-     * Plays a sound effect by dispatching a playSFX Event. If variantMin and variantMaxExclusive
+     * Plays a sound effect by dispatching a play-sfx Event. If variantMin and variantMaxExclusive
      * parameters are included, a sound effect variant will be picked from the specified range.
      * For example, only passing 'confirm-choice' will play the sound effect confirm-choice.
      * Passing 'confirm-choice', 0, 2 will play one of the sound sound effects 'confirm-choice-0',
@@ -426,11 +461,11 @@ customElements.define('tic-tac-toe-state',
      */
     PlaySoundEffect (sfxName, variantMin, variantMaxExclusive) {
       if (variantMin == null) {
-        this.dispatchEvent(new window.CustomEvent('playSFX', { detail: { name: sfxName } }))
+        this.dispatchEvent(new window.CustomEvent('play-sfx', { detail: { name: sfxName } }))
       } else {
         const selectedSoundEffect = this.GetRandomInteger(variantMin, variantMaxExclusive)
         this.dispatchEvent(new window.CustomEvent(
-          'playSFX', { detail: { name: sfxName + '-' + selectedSoundEffect } }))
+          'play-sfx', { detail: { name: sfxName + '-' + selectedSoundEffect } }))
       }
     }
 

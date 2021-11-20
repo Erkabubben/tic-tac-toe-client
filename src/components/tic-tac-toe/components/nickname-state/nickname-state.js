@@ -13,19 +13,16 @@ const imagesOfParentPath = new URL('../../img/', pathToModule)
 const template = document.createElement('template')
 template.innerHTML = `
   <style>
-
     img {
       margin: auto;
       display: block;
     }
-
     img#pencils {
       position: absolute;
       height: 90%;
       left: 35%;
       transform: translate(-50%, 0 );
     }
-
     /* Animation code */
     @keyframes pencils-appear {
       from {
@@ -44,23 +41,42 @@ template.innerHTML = `
       animation-duration: 1s;
       animation-timing-function: ease-out;
     }
-
     #game-title {
       position: absolute;
     }
-
     #game-title-headers {
       position: relative;
       left: 25%;
       top: 20%;
     }
-
     #game-title-headers h1 {
       position: absolute;
       font-size: 110px;
       font-family: "Lucida Handwriting", cursive;
     }
-
+    #tic {
+      left: 0px;
+      top: 0px;
+      animation-name: tic-appear;
+      animation-duration: 1s;
+      animation-timing-function: ease-out;
+    }
+    #tac {
+      color: #E31E24;
+      left: 100px;
+      top: 110px;
+      animation-name: tac-appear;
+      animation-duration: 1s;
+      animation-timing-function: ease-out;
+    }
+    #toe {
+      color: #008DD2;
+      left: 200px;
+      top: 220px;
+      animation-name: toe-appear;
+      animation-duration: 1s;
+      animation-timing-function: ease-out;
+    }
     /* Animation code */
     @keyframes tic-appear {
       from {
@@ -72,7 +88,6 @@ template.innerHTML = `
         top: 0px;
       }
     }
-
     @keyframes tac-appear {
       from {
         opacity: 0.0;
@@ -83,7 +98,6 @@ template.innerHTML = `
         left: 100px;
       }
     }
-
     @keyframes toe-appear {
       from {
         opacity: 0.0;
@@ -94,33 +108,6 @@ template.innerHTML = `
         top: 220px;
       }
     }
-
-    #tic {
-      left: 0px;
-      top: 0px;
-      animation-name: tic-appear;
-      animation-duration: 1s;
-      animation-timing-function: ease-out;
-    }
-
-    #tac {
-      color: #E31E24;
-      left: 100px;
-      top: 110px;
-      animation-name: tac-appear;
-      animation-duration: 1s;
-      animation-timing-function: ease-out;
-    }
-
-    #toe {
-      color: #008DD2;
-      left: 200px;
-      top: 220px;
-      animation-name: toe-appear;
-      animation-duration: 1s;
-      animation-timing-function: ease-out;
-    }
-
     /*@keyframes form-appear {
       0% {
         opacity: 0.5;
@@ -136,13 +123,11 @@ template.innerHTML = `
         left: 50%;
       }
     }*/
-
     form {
       animation-name: form-appear;
       animation-duration: 1s;
       animation-timing-function: ease-out;
     }
-
     form {
       position: absolute;
       left: 50%;
@@ -153,7 +138,6 @@ template.innerHTML = `
       width: 50%;
       background-image: url("${imagesOfParentPath}square-paper-bg-0.jpg");
     }
-
     form input#nickname {
       position: absolute;
       transform: translate(-50% ,0 );
@@ -164,7 +148,6 @@ template.innerHTML = `
       font-size: 1.25rem;
       padding: 8px;
     }
-
     form p {
       display: block;
       text-align: center;
@@ -172,27 +155,10 @@ template.innerHTML = `
       color: black;
       font-size: 150%;
     }
-
-    form button {
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-      font-weight: bold;
-      background-color: #444444;
-      border: 2px outset #444444;
-      width: 4rem;
-    }
-
-    form button:hover {
-      background-color: #999999;
-      border-color: #999999;
-    }
-
     :focus {
       box-shadow: 0px 0px 1px 3px red;
       outline: none;
     }
-
     ::part(selected) {
       box-shadow: 0px 0px 1px 3px red;
     }
@@ -203,10 +169,14 @@ template.innerHTML = `
       <input type="text" id="nickname" class="selectable" autocomplete="off">
       <br><br>
       <p>Game Rounds: </p>
-      <div id="alternatives"></div><br>
+      <div id="alternatives"></div>
+      <div id="audio-switches">
+        <button name="music-switch" id="music-switch">Music</button>
+        <button name="sfx-switch" id="sfx-switch">SFX</button>
+      </div>
     </form>
     <br>
-    <img id="pencils" src="` + imagesOfParentPath + `tic-tac-toe-pencils.png">
+    <img id="pencils" src="${imagesOfParentPath}tic-tac-toe-pencils.png">
     <div id="game-title-headers">
       <h1 id="tic">Tic</h1>
       <h1 id="tac">Tac</h1>
@@ -237,7 +207,6 @@ customElements.define('nickname-state',
 
       /* Nickname screen properties */
       this._nicknameState = this.shadowRoot.querySelector('#nickname-state')
-      this._button = this.shadowRoot.querySelector('button')
       this._input = this.shadowRoot.querySelector('input')
       this._alternatives = this.shadowRoot.querySelector('#alternatives')
 
@@ -255,10 +224,23 @@ customElements.define('nickname-state',
           event.preventDefault()
           if (this._input.value.length > 2) {
             this.dispatchEvent(new window.CustomEvent(
-              'nicknameSet',
+              'nickname-set',
               { detail: { nickname: this._input.value, game: newAlternative.value } }))
           }
         })
+      })
+
+      // Audio mute buttons setup.
+      this._musicSwitchButton = this.shadowRoot.querySelector('#music-switch')
+      this._sfxSwitchButton = this.shadowRoot.querySelector('#sfx-switch')
+
+      this._musicSwitchButton.addEventListener('click', (event) => { // Checks if the mouse has been clicked
+        event.preventDefault()
+        this.dispatchEvent(new window.CustomEvent('toggle-audio', { detail: 'music' }))
+      })
+      this._sfxSwitchButton.addEventListener('click', (event) => { // Checks if the mouse has been clicked
+        event.preventDefault()
+        this.dispatchEvent(new window.CustomEvent('toggle-audio', { detail: 'sfx' }))
       })
 
       /* Properties for determining which element is currently selected */
@@ -309,13 +291,13 @@ customElements.define('nickname-state',
             this._selectedElement = (this._selectables.length - 1)
           }
           this._selectables[this._selectedElement].focus()
-        /* Dispatches nicknameSet event to proceed to tic-tac-toe-state when pressing Enter,
+        /* Dispatches nickname-set event to proceed to tic-tac-toe-state when pressing Enter,
            if game button is highlighted and nickname has been set */
         } else if (event.keyCode === 13 && this._selectedElement !== 0) { // Enter, when game button is selected...
           event.preventDefault()
           if (this._input.value.length > 2) { // ...and a valid nickname is set.
             this.dispatchEvent(new window.CustomEvent(
-              'nicknameSet',
+              'nickname-set',
               { detail: { nickname: this._input.value, game: this._selectables[this._selectedElement].value } }))
           }
         }
@@ -339,6 +321,24 @@ customElements.define('nickname-state',
       /* Sets up initial keyboard event listeners */
       this.addEventListener('keydown', this.keyDownFunction)
       this.addEventListener('keyup', this.keyUpFunction)
+    }
+
+    /**
+     * Updates the states of the Audio Toggle Buttons based on the parameters. Usually called when
+     * initiating the state and whenever the user clicks one of the buttons.
+     *
+     * @param {boolean} sfxMuted - Bool indicating whether or not sound effects audio elements are muted.
+     * @param {boolean} musicMuted - Bool indicating whether or not music audio elements are muted.
+     */
+    UpdateAudioToggleButtons (sfxMuted, musicMuted) {
+      this._sfxSwitchButton.classList.remove('disabled')
+      this._musicSwitchButton.classList.remove('disabled')
+      if (sfxMuted) {
+        this._sfxSwitchButton.classList.add('disabled')
+      }
+      if (musicMuted) {
+        this._musicSwitchButton.classList.add('disabled')
+      }
     }
 
     /**
