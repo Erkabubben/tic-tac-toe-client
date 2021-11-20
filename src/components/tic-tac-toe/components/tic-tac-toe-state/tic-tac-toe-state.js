@@ -42,6 +42,30 @@ template.innerHTML = `
         transform: rotate(deg)
       }
     }
+    @keyframes tiles-area-disappear {
+      0% {
+        opacity: 1.0;
+        top: 50%;
+        left: 50%;
+        transform: rotate(deg)
+      }
+      100% {
+        opacity: 0.5;
+        top: 120%;
+        left: -5%;
+        transform: rotate(25deg)
+      }
+    }
+    .tiles-area-appear {
+      animation-name: tiles-area-appear;
+      animation-duration: 0.5s;
+      animation-timing-function: ease-out;
+    }
+    .tiles-area-disappear {
+      animation-name: tiles-area-disappear;
+      animation-duration: 0.35s;
+      animation-timing-function: ease-in;
+    }
     #tiles-area {
       width: max-content;
       position: absolute;
@@ -49,9 +73,6 @@ template.innerHTML = `
       left: 50%;
       transform: translate(-50%, -50%);
       background-image: url("${imagesOfParentPath}square-paper-bg-0.jpg");
-      animation-name: tiles-area-appear;
-      animation-duration: 0.5s;
-      animation-timing-function: ease-out;
     }
     #h-line-0, #h-line-1 {
       position: absolute;
@@ -93,6 +114,30 @@ template.innerHTML = `
         transform: rotate(0deg)
       }
     }
+    @keyframes ui-area-disappear {
+      0% {
+        opacity: 1.0;
+        top: 0%;
+        right: 0%;
+        transform: rotate(0deg)
+      }
+      100% {
+        opacity: 0.5;
+        top: 100%;
+        right: -20%;
+        transform: rotate(25deg)
+      }
+    }
+    .ui-area-appear {
+      animation-name: ui-area-appear;
+      animation-duration: 0.5s;
+      animation-timing-function: ease-out;
+    }
+    .ui-area-disappear {
+      animation-name: ui-area-disappear;
+      animation-duration: 0.35s;
+      animation-timing-function: ease-in;
+    }
     #ui-area {
       position: absolute;
       background-image: url("${imagesOfParentPath}square-paper-bg-0.jpg");
@@ -100,9 +145,6 @@ template.innerHTML = `
       height: 100%;
       right: 0px;
       top: 0px;
-      animation-name: ui-area-appear;
-      animation-duration: 0.5s;
-      animation-timing-function: ease-out;
     }
     #ui-area h1 {
       color: black;
@@ -155,10 +197,15 @@ customElements.define('tic-tac-toe-state',
       this._ticTacToeState = this.shadowRoot.querySelector('#tic-tac-toe-state')
       this._gameArea = this.shadowRoot.querySelector('#game-area')
       this._tilesArea = this.shadowRoot.querySelector('#tiles-area')
+      this._uiArea = this.shadowRoot.querySelector('#ui-area')
       this._winsCounter = this.shadowRoot.querySelector('#winscounter')
       this._lossesCounter = this.shadowRoot.querySelector('#lossescounter')
       this._tiesCounter = this.shadowRoot.querySelector('#tiescounter')
       this._gameNumberCounter = this.shadowRoot.querySelector('#gamenumbercounter')
+
+      // Initiate appear animations for tilesArea and uiArea
+      this._tilesArea.classList.add('tiles-area-appear')
+      this._uiArea.classList.add('ui-area-appear')
 
       this.tileSize = 160 // Default tile size
 
@@ -448,6 +495,11 @@ customElements.define('tic-tac-toe-state',
         this.PlaySoundEffect('tie')
         await this.Delay(2000)
       }
+      this._tilesArea.classList.remove('tiles-area-appear')
+      this._uiArea.classList.remove('ui-area-appear')
+      this._tilesArea.classList.add('tiles-area-disappear')
+      this._uiArea.classList.add('ui-area-disappear')
+      await this.AwaitAnimationEnd(this._tilesArea)
       this._disableAllInput = false
       this.dispatchEvent(new window.CustomEvent('gameOver', { detail: json.winner }))
     }

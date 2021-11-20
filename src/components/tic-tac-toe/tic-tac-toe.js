@@ -396,7 +396,7 @@ customElements.define('tic-tac-toe',
             That means it's a tie!`
           ]
         }
-        this.DisplayTimedMessage(message, 4000, (e) => { this.DisplayHighscoreState() })
+        this.DisplayTimedMessage(message, 3500, (e) => { this.DisplayHighscoreState() })
       }
     }
 
