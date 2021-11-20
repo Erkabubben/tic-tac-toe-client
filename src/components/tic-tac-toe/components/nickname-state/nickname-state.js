@@ -242,7 +242,7 @@ customElements.define('nickname-state',
       this._alternatives = this.shadowRoot.querySelector('#alternatives')
 
       /* Amounts of game rounds to choose from */
-      const gameTypes = ['1', '2', '3', '5', '10', '25', '50']
+      const gameTypes = ['1', '3', '5', '10', '25', '50']
 
       /* Creates a button for each element in the gameTypes array */
       gameTypes.forEach(element => {
