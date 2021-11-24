@@ -1,11 +1,15 @@
 # Tic Tac Toe
 This component is a single-page application Tic Tac Toe game. Features include multiple game modes, keyboard controls, and highscore lists stored locally (note that <b>highscores will be erased when clearing browser cache.</b>)
 
+https://user-images.githubusercontent.com/57233721/143274683-b85b2240-6a63-44dc-b909-9b88828a5a3a.mp4
+
 ## Running the application
-1. First, run the included .jar file to start the API, which will run on port 8080 by default. The API requires Java 1.8 and can be started by double-clicking the .jar file, or by using the command `java -jar tic-tac-toe-api-1.0.0.jar`.
-2. Open the application folder in your code editor of choice and use the command `npm install`.
-3. Use the command `npm start`. If questioned `Port 8080 not available. Run on port 8081 instead? (Y/n)`, answer `Y`.
-4. The application should now start automatically in your web browser. You can also open the browser yourself and access it by typing `http://localhost:8081/` in the address field.
+
+1. First, unzip `tic-tac-toe-api-1.0.1.tar.xz` located in the root folder.
+2. Run the .jar file to start the API, which will run on port 8080 by default. The API requires Java 1.8 and can be started by double-clicking the .jar file, or by using the command `java -jar tic-tac-toe-api-1.0.0.jar`.
+3. Open the application folder in your code editor of choice and use the command `npm install`.
+4. Use the command `npm start`. If questioned `Port 8080 not available. Run on port 8081 instead? (Y/n)`, answer `Y`.
+5. The application should now start automatically in your web browser. You can also open the browser yourself and access it by typing `http://localhost:8081/` in the address field.
 
 # System architecture
 The Tic Tac Toe application consists of the following web components:
